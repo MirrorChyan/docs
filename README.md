@@ -12,9 +12,9 @@ Mirror酱集成文档
 举例来说，您需要 `GET` 请求 `https://mirrorc.top/api/resources/{res_id}/latest?current_version=v0.0.1&cdk=xxxx&sp_id=xxxx&user_agent=xxxx`，其中：
 
 - `{res_id}` 设置为您要更新的资源 ID，必选。例如 `M9A`, `MaaResource` 等，具体请联系 Mirror 酱技术支持人员。
-- `current_version` 设置为当前的资源版本号，推荐必选。
+- `current_version` 设置为当前用户本地的资源版本号，推荐必选。
 - `cdk` 设置为用户提供的 cdk。可选，若用户未提供 cdk，也可使用该 API 来检查更新，单独的检查更新功能是免费的。但无法进一步进行下载。
-- `sq_id` 设置为用户设备硬件 id，可以使用 mac 地址进行 hash。当 `cdk` 已填写时，请一并上传 `sq_id`。
+- `sq_id` 设置为用户设备硬件 id，当 `cdk` 有值时必选。可以使用 mac 地址进行 hash，也可采用其他方式，保证每台用户设备有唯一值即可。
 - `user_agent` 设置为 UI 的名称。例如 `MFA`, `MAA_WPF` 等，由您自行决定，后续保持不变即可。
 
 响应举例：
