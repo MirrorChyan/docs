@@ -9,7 +9,7 @@ Mirror酱集成文档
 
 [API 详情](https://apifox.com/apidoc/shared-ffdc8453-597d-4ba6-bd3c-5e375c10c789/253583257e0)
 
-举例来说，您需要 `GET` 请求 `https://mirrorc.top/api/resources/{res_id}/latest?current_version=v0.0.1&cdk=xxxx&sp_id=xxxx&user_agent=xxxx`，其中：
+举例来说，您需要 `GET` 请求 `https://mirrorc.top/api/resources/{res_id}/latest?current_version=v0.0.1&cdk=xxxx&user_agent=xxxx`，其中：
 
 - `{res_id}` 设置为您要更新的资源 ID，必选。例如 `M9A`, `MaaResource` 等，具体请联系 Mirror 酱技术支持人员。
 - `current_version` 设置为当前用户本地的资源版本号，推荐必选。
