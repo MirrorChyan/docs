@@ -24,7 +24,6 @@ Mirror酱集成文档
   "msg": "success",
   "data": {
     "version_name": "v1.1.0",
-    "version_number": 2,
     "url": "https://mirrorc.top/resources/download/xxxxxx"
   }
 }
