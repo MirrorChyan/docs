@@ -24,7 +24,7 @@ Mirror酱集成文档
   "msg": "success",
   "data": {
     "version_name": "v1.1.0",
-    "url": "https://hz01.mirrorchyan.com/resources/download/xxxxxx"
+    "url": "https://mirrorchyan.com/resources/download/xxxxxx"
   }
 }
 ```
@@ -34,12 +34,14 @@ Mirror酱集成文档
 若未提供 cdk，则 `data.url` 字段为空，但 `version.name` 始终有值，您可借此来提示用户有更新，即上文提到的单独作为检查更新 API 来使用是免费的。  
 由于用户侧的 github 访问可能受限，我们推荐您优先使用 Mirror 酱来检查是否有更新。至于后续是自动从 github 下载、跳转 github 网页、亦或是提示用户购买 Mirror 酱，可根据您的项目实际情况选择。
 
-响应中 `code` 为 0 表示成功，其他情况可参照 [ErrorCode.md](./ErrorCode.md) 显示错误信息，或直接显示一下 `msg` 字段信息。
+响应中 `code` 为 0 表示成功，其他情况可参照 [ErrorCode.md](./ErrorCode.md) 显示错误信息，或直接显示一下 `msg` 字段信息。  
+
+下载的增量包中，会额外包含一个 [changes.json](./changes.json) 文件，包含文件变动信息，推荐关注其中 `deleted` 字段，删除新版本不再需要的文件。
 
 ## 经典流程
 
 1. 在您的软件设置中加入输入框，可输入 cdk；旁边添加 `Mirror酱` 网页跳转链接：`https://mirrorchyan.com`。
-2. 若用户未输入 cdk，仍可用 Mirror 酱检查是否有更新。若有更新，提示用户：“使用 Mirror 酱检查到了更新，但未填写 CDK，已自动切换至 github 源进行下载”。具体文案和后续行为由您自行决定。
+2. 若用户未输入 cdk，仍可用 Mirror 酱检查是否有更新。若有更新，提示用户：“Mirror 酱检测到了更新，但未填写 CDK，已自动切换至 github 源进行下载”。具体文案和后续行为由您自行决定。
 3. 若用户已输入 cdk，则使用响应中的链接下载增量更新包，并完成更新。
 4. 我们会每月根据用户使用情况，向 res_id 方（资源作者）及 user_agent 方（UI 作者）分别共享收益，具体请进群详聊！
 
