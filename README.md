@@ -36,7 +36,7 @@ Mirror酱集成文档
 
 响应中 `code` 为 0 表示成功，其他情况可参照 [ErrorCode.md](./ErrorCode.md) 显示错误信息，或直接显示一下 `msg` 字段信息。  
 
-下载的增量包中，会额外包含一个 [changes.json](./changes.json) 文件，包含文件变动信息，推荐关注其中 `deleted` 字段，删除新版本不再需要的文件。
+下载的增量包中，会额外包含一个 `changes.json` 文件，包含文件变动信息。详情请参考 [Incremental.md](./Incremental.md)，推荐关注其中 `deleted` 字段，删除新版本不再需要的文件。
 
 ## 经典流程
 
