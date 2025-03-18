@@ -7,8 +7,6 @@ Mirror酱集成文档
 
 ## 接口介绍
 
-[API 详情](https://apifox.com/apidoc/shared-ffdc8453-597d-4ba6-bd3c-5e375c10c789/253583257e0)
-
 举例来说，您需要 `GET` 请求 `https://mirrorchyan.com/api/resources/{res_id}/latest?current_version=v0.0.1&cdk=xxxx&user_agent=xxxx`，其中：
 
 - `{res_id}` 设置为您要更新的资源 ID，必选。例如 `M9A`, `MaaResource` 等，具体请联系 Mirror 酱技术支持人员。
@@ -33,6 +31,8 @@ Mirror酱集成文档
 
 若未提供 cdk，则 `data.url` 字段为空，但 `version.name` 始终有值，您可借此来提示用户有更新，即上文提到的单独作为检查更新 API 来使用是免费的。  
 由于用户侧的 github 访问可能受限，我们推荐您优先使用 Mirror 酱来检查是否有更新。至于后续是自动从 github 下载、跳转 github 网页、亦或是提示用户购买 Mirror 酱，可根据您的项目实际情况选择。
+
+详细的请求及响应字段请参考：[API 详情](https://apifox.com/apidoc/shared-ffdc8453-597d-4ba6-bd3c-5e375c10c789/253583257e0)。
 
 响应中 `code` 为 0 表示成功，其他情况可参照 [ErrorCode.md](./ErrorCode.md) 显示错误信息，或直接显示一下 `msg` 字段信息。  
 
