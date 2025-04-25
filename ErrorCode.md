@@ -19,6 +19,7 @@
 | 403    | 7002 | KEY_INVALID              | CDK 错误                     |
 | 403    | 7003 | RESOURCE_QUOTA_EXHAUSTED | CDK 今日下载次数已达上限            |
 | 403    | 7004 | KEY_MISMATCHED           | CDK 类型和待下载的资源不匹配          |
+| 403    | 7005 | KEY_BLOCKED              | CDK 已被封禁                    |
 | 404    | 8001 | RESOURCE_NOT_FOUND       | 对应架构和系统下的资源不存在            |
 | 400    | 8002 | INVALID_OS               | 错误的系统参数                   |
 | 400    | 8003 | INVALID_ARCH             | 错误的架构参数                   |
