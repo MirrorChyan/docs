@@ -1,19 +1,32 @@
-# docs
+# Mirror酱 服务集成指南
 
-Mirror酱集成文档
+## API 接口
 
-## 接口介绍
+### 接口基础信息
 
-请参考 [API 详情](https://apifox.com/apidoc/shared-ffdc8453-597d-4ba6-bd3c-5e375c10c789/253583257e0)。
+- **服务端点**：`GET https://mirrorchyan.com/api/resources/{res_id}/latest`
+- **接口文档**：[OpenAPI](https://apifox.com/apidoc/shared-ffdc8453-597d-4ba6-bd3c-5e375c10c789/253583257e0)
 
-举例来说，您需要 `GET` 请求 `https://mirrorchyan.com/api/resources/{res_id}/latest?current_version=v0.0.1&cdk=xxxx&user_agent=xxxx`，其中：
+### 请求参数说明
 
-- `{res_id}` 设置为您要更新的资源 ID，必选。例如 `M9A`, `MaaResource` 等，具体请联系 Mirror 酱技术支持人员。
-- `current_version` 设置为当前用户本地的资源版本号，推荐必选。
-- `cdk` 设置为用户提供的 cdk。可选。若用户未提供 cdk，也可使用该 API 来检查更新，但无法进一步进行下载。即单独作为检查更新 API 来使用是免费的。
-- `user_agent` 设置为 UI 的名称。例如 `MFA`, `MAA_WPF` 等，由您自行决定，后续保持不变即可。
+| 参数名称          | 类型     | 必填 | 描述                                                                 |
+|--------------------|----------|------|----------------------------------------------------------------------|
+| res_id             | path     | 是   | 资源标识符，请联系技术支持获取     |
+| current_version    | query    | 推荐 | 当前本地资源版本号（推荐遵循 SemVer 规范）                               |
+| cdk                | query    | 否   | 用户激活密钥                                   |
+| user_agent         | query    | 否   | 客户端标识          |
 
-响应举例：
+[完整请求参数](https://apifox.com/apidoc/shared-ffdc8453-597d-4ba6-bd3c-5e375c10c789/253583257e0)
+
+### 调用示例
+
+```bash
+curl -X GET "https://mirrorchyan.com/api/resources/M9A/latest?current_version=v0.0.1&cdk=XXXXX&user_agent=MAA_WPF"
+```
+
+### 响应数据结构
+
+#### 成功响应示例（主要字段）
 
 ```json
 {
@@ -26,30 +39,53 @@ Mirror酱集成文档
 }
 ```
 
-在请求时，若 cdk 正确，我们会在响应中提供一次性下载链接，`data.url` 字段，直接调用下载文件即可。
+##### 字段说明
 
-若未提供 cdk，则 `data.url` 字段为空，但 `version.name` 始终有值，您可借此来提示用户有更新，即上文提到的单独作为检查更新 API 来使用是免费的。  
-由于用户侧的 github 访问可能受限，我们推荐您优先使用 Mirror 酱来检查是否有更新。至于后续是自动从 github 下载、跳转 github 网页、亦或是提示用户购买 Mirror 酱，可根据您的项目实际情况选择。
+- **version_name**: 最新版本号（始终返回）
+- **url**: 带时效的下载地址（CDK有效时返回）
 
-详细的请求及响应字段请参考：[API 详情](https://apifox.com/apidoc/shared-ffdc8453-597d-4ba6-bd3c-5e375c10c789/253583257e0)。
+[完整响应字段](https://apifox.com/apidoc/shared-ffdc8453-597d-4ba6-bd3c-5e375c10c789/253583257e0)
 
-响应中 `code` 为 0 表示成功，其他情况可参照 [ErrorCode.md](./ErrorCode.md) 显示错误信息，或直接显示一下 `msg` 字段信息。  
+#### 失败响应
 
-下载的增量包中，会额外包含一个 `changes.json` 文件，包含文件变动信息。详情请参考 [Incremental.md](./Incremental.md)，推荐关注其中 `deleted` 字段，删除新版本不再需要的文件。
+请参考 [错误代码表](./ErrorCode.md)
 
-## 经典流程
+## 集成流程指南
 
-1. 在您的软件设置中加入输入框，可输入 cdk；旁边添加 `Mirror酱` 网页跳转链接：`https://mirrorchyan.com`。
-2. 若用户未输入 cdk，仍可用 Mirror 酱检查是否有更新。若有更新，提示用户：“检测到更新，正在使用 github 源下载中，可进入设置切换 Mirror酱 源以高速下载”。具体文案和后续行为由您自行决定。
-3. 若用户已输入 cdk，则使用响应中的链接下载增量更新包，并完成更新。
-4. 我们会每月根据用户使用情况，向 res_id 方（资源作者）及 user_agent 方（UI 作者）分别共享收益，具体请进群详聊！
+_集成流程仅为推荐做法，供您参考，非强制要求，具体的文案及行为请根据项目实际调整_
+
+### 前置条件配置
+
+1. 在客户端设置中添加：
+   - CDK 输入文本框
+   - 网页跳转链接：`[Mirror酱](https://mirrorchyan.com)`
 
 *请考虑日志、配置文件等中，尽量不要出现 CDK 明文，避免意外泄漏。*
 
-## 上传资源
+### 检查更新流程
 
-现阶段由 Mirror酱 开发组为您提供技术支持，我们将为您的项目 PR 一个自动资源上传 CI，会在每次版本发布的时候全自动上传，也可根据您的需求改为每次有新提交则自动上传或其他方式~
+```mermaid
+graph TD
+    A[启动更新检查] --> B[调用 Mirror酱 API]
+    B --> C{版本比对}
+    C -->|有更新| D{Mirror酱 响应了 url？}
+    C -->|无更新| Z[结束流程]
+    D -->|有url| E[调用 url 下载]
+    D -->|无url| F[请求 GitHub 或其他镜像下载]
+    E --> I[触发增量更新]
+```
+
+### 增量更新流程
+
+1. 解压更新包
+2. 若存在 `changes.json`，请参考 [增量包内容](./Incremental.md) 中 `deleted` 字段，删除不再需要的文件。
+3. 覆盖文件（Tips: 若要待更新程序本身正在运行，可先将其重命名，再复制新文件。即重命名是不依赖程序是否运行的）
+
+## 自动化上传
+
+我们会为您 PR 标准化的 CI/CD 解决方案，在每次版本发布/新提交推送时全自动上传~
 
 ## 联系我们
 
-QQ 群 1026040805，您有任何集成开发问题，或合作意向，欢迎加群详谈！
+集成开发 QQ 群：1026040805
+用户售后 QQ 群：995458883
