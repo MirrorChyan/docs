@@ -72,7 +72,7 @@ Mirror酱 API 在大陆和海外都有良好的连通性，推荐即使未填写
 graph TD
     A[启动更新检查] --> B[调用 Mirror酱 API]
     B --> C{Mirror酱返回 code 0？}
-    C -->|code == 0| D{版本比对}
+    C -->|code == 0| D{版本号比对}
     C -->|code != 0| Y[提示错误]
     D -->|有更新| F{Mirror酱返回 url？}
     D -->|无更新| Z[结束流程]
