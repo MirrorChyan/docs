@@ -34,7 +34,8 @@ curl -X GET "https://mirrorchyan.com/api/resources/M9A/latest?current_version=v0
   "msg": "success",
   "data": {
     "version_name": "v1.1.0",
-    "url": "https://mirrorchyan.com/resources/download/xxxxxx"
+    "url": "https://mirrorchyan.com/resources/download/xxxxxx",
+    "release_note": "该版本新增了xxx功能；修复了xxx bug"
   }
 }
 ```
@@ -42,7 +43,8 @@ curl -X GET "https://mirrorchyan.com/api/resources/M9A/latest?current_version=v0
 ##### 字段说明
 
 - **version_name**: 最新版本号（始终返回）
-- **url**: 带时效的下载地址（CDK有效时返回）
+- **url**: 带时效的下载地址（有新版本且CDK有效时返回）
+- **release_note**: 版本日志（有新版本时返回）
 
 [完整响应字段](https://apifox.com/apidoc/shared-ffdc8453-597d-4ba6-bd3c-5e375c10c789/253583257e0)
 
@@ -68,7 +70,7 @@ _集成流程仅为推荐做法，供您参考，非强制要求，具体的文�
 graph TD
     A[启动更新检查] --> B[调用 Mirror酱 API]
     B --> C{版本比对}
-    C -->|有更新| D{Mirror酱 响应了 url？}
+    C -->|有更新| D{Mirror酱返回了 url？}
     C -->|无更新| Z[结束流程]
     D -->|有url| E[调用 url 下载]
     D -->|无url| F[通过 GitHub 下载]
