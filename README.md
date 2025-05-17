@@ -48,6 +48,24 @@ curl -X GET "https://mirrorchyan.com/api/resources/M9A/latest?current_version=v0
 
 [完整响应字段](https://apifox.com/apidoc/shared-ffdc8453-597d-4ba6-bd3c-5e375c10c789/253583257e0)
 
+``` typescript
+interface IQueryLatestResponseData {
+    version_name: string; //版本号
+    version_number: number; // 内部版本号
+    channel: string; // 更新通道
+    os: string; // 操作系统
+    arch: string; // 系统架构
+
+    url?: string; // 更新包下载URL
+    update_type?: 'incremental' | 'full'; // UpdateType is the type of the update, it can be "full" or "incremental"
+    sha256: string; // 更新包SHA256
+    custom_data?: string; 
+    release_note?: string; // 更新日志
+    filesize?: number; // 更新包大小
+    cdk_expired_time?: number; // CDK 过期时间戳
+}
+```
+
 #### 失败响应
 
 请参考 [错误代码表](./ErrorCode.md)
