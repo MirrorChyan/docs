@@ -4,7 +4,7 @@
 
 ### 接口基础信息
 
-- **服务端点**：`GET https://mirrorchyan.com/api/resources/{res_id}/latest`
+- **服务端点**：`GET` `https://mirrorchyan.com/api/resources/{res_id}/latest`
 - **接口文档**：[OpenAPI](https://apifox.com/apidoc/shared-ffdc8453-597d-4ba6-bd3c-5e375c10c789/253583257e0)
 
 ### 请求参数说明
@@ -66,7 +66,7 @@ _集成流程仅为推荐做法，供您参考，非强制要求，具体的文�
 
 ### 检查更新流程
 
-Mirror酱 API 在大陆和海外都有良好的连通性，推荐即使未填写 CDK 时也使用 Mirror酱 API 检查，以更高效获取更新消息。
+Mirror酱 API 在中国大陆和海外都有良好的连通性，推荐即使未填写 CDK 时也使用 Mirror酱 API 检查，以更高效获取更新消息。
 
 ```mermaid
 graph TD
