@@ -14,7 +14,7 @@
 | res_id             | path     | 是   | 资源标识符，请联系技术支持获取     |
 | current_version    | query    | 推荐 | 当前本地资源版本号（推荐遵循 SemVer 规范）                               |
 | cdk                | query    | 否   | 用户激活密钥                                   |
-| user_agent         | query    | 否   | 客户端标识          |
+| user_agent         | query    | 否   | 客户端标识，可用于营收统计来源          |
 
 [完整请求参数](https://apifox.com/apidoc/shared-ffdc8453-597d-4ba6-bd3c-5e375c10c789/253583257e0)
 
