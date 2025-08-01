@@ -15,7 +15,7 @@
 | status | code | details                  | remark                    |
 | ------ | ---- | ------------------------ | ------------------------- |
 | 400    | 1001 | INVALID_PARAMS           | 参数不正确，请参考集成文档             |
-| 400    | 7001 | KEY_EXPIRED              | CDK 已过期                    |
+| 403    | 7001 | KEY_EXPIRED              | CDK 已过期                    |
 | 403    | 7002 | KEY_INVALID              | CDK 错误                     |
 | 403    | 7003 | RESOURCE_QUOTA_EXHAUSTED | CDK 今日下载次数已达上限            |
 | 403    | 7004 | KEY_MISMATCHED           | CDK 类型和待下载的资源不匹配          |
