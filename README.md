@@ -96,7 +96,7 @@ graph TD
 
 ### 签到源
 
-可在 API 请求（`https://mirrorchyan.com/api/resources/{res_id}/latest`) 中添加请求参数 `user_agent`，反应用户第一次从何处使用 CDK，对应为统计面板中的 `签到源`  
+可在 API 请求（`https://mirrorchyan.com/api/resources/{res_id}/latest`) 中添加请求参数 `user_agent`，反应用户从何处使用 CDK，对应为统计面板中的 `签到源`  
 例如 `https://mirrorchyan.com/api/resources/M9A/latest?current_version=v0.0.1&user_agent=M9A_APP`  
 
 注：从 [Mirror酱项目一览](https://mirrorchyan.com/zh/projects) 中下载应用，该值为 `mirrorchyan_web`
