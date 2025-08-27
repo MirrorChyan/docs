@@ -96,7 +96,7 @@ graph TD
 
 - 可在 API 请求（`https://mirrorchyan.com/api/resources/{res_id}/latest`) 中添加请求参数 `user_agent`，反应为营收统计中的 `签到源`  
   例如从 [项目一览](https://mirrorchyan.com/zh/projects) 中下载应用，该值为 `mirrorchyan_web`
-- 可在 网页跳转链接 中添加请求参数 `source`，反应为营收统计中的 `付费源`
+- 可在 网页跳转链接 中添加请求参数 `source`，反应为营收统计中的 `付费源`  
   建议的值为 app名-链接位置，例如 `https://mirrorchyan.com/zh/projects?rid=MAA&source=maa_github_release`, `https://mirrorchyan.com?source=maa_app_settings` 等
 
 ## 联系我们
