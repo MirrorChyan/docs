@@ -14,7 +14,6 @@
 | res_id             | path     | 是   | 资源标识符，请联系技术支持获取     |
 | current_version    | query    | 推荐 | 当前本地资源版本号（推荐遵循 SemVer 规范）                               |
 | cdk                | query    | 否   | 用户激活密钥                                   |
-| user_agent         | query    | 否   | 客户端标识，可用于营收统计来源          |
 
 [完整请求参数](https://apifox.com/apidoc/shared-ffdc8453-597d-4ba6-bd3c-5e375c10c789/253583257e0)
 
@@ -90,6 +89,15 @@ graph TD
 ## 自动化上传
 
 我们会为您 PR 定制化的 CI/CD 解决方案，在每次版本发布/新提交推送时全自动上传，具体方案请与我们联系~
+
+## 来源统计
+
+可选功能，统计用户来源。
+
+- 可在 API 请求（`https://mirrorchyan.com/api/resources/{res_id}/latest`) 中添加请求参数 `user_agent`，反应为营收统计中的 `签到源`  
+  例如从 [项目一览](https://mirrorchyan.com/zh/projects) 中下载应用，该值为 `mirrorchyan_web`
+- 可在 网页跳转链接 中添加请求参数 `source`，反应为营收统计中的 `付费源`
+  建议的值为 app名-链接位置，例如 `https://mirrorchyan.com/zh/projects?rid=MAA&source=maa_github_release`, `https://mirrorchyan.com?source=maa_app_settings` 等
 
 ## 联系我们
 
