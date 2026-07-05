@@ -70,13 +70,13 @@ Mirror酱在中国大陆和境外拥有 6000+ 高质量阿里云/腾讯云 CDN �
 ```mermaid
 graph TD
     A[启动更新检查] --> B[调用 Mirror酱 API]
-    B --> C{Mirror酱返回 code 0？}
-    C -->|code == 0| D{版本号比对}
-    C -->|code != 0| Y[提示错误]
-    D -->|有更新| F{Mirror酱返回 url？}
+    B --> C{返回 code 0？}
+    C -->|是| D{版本号比对}
+    C -->|否| Y[提示错误]
+    D -->|有更新| F{返回 url？}
     D -->|无更新| Z[结束流程]
-    F -->|有url| G[调用 url 下载]
-    F -->|无url| H[通过 GitHub 下载]
+    F -->|有| G[调用 url 下载]
+    F -->|无| H[通过 GitHub 下载]
     G --> I[触发增量更新]
 ```
 
