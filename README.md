@@ -110,8 +110,8 @@ Mirror酱 提供不精确的日活统计功能，辅助开发者了解检查更�
 可在 网页跳转链接 中添加请求参数 `source`，反应用户从何处打开 Mirror酱 网站（并付费），对应为统计面板中的 `付费源`  
 建议的值为 app名-链接位置，例如 `https://mirrorchyan.com/zh/projects?rid=MAA&source=maa_github_release`, `https://mirrorchyan.com?source=maa_app_settings` 等
 
-### 其他问题
-请参考 [常见问题](./FAQ.md)
+### 更多问题
+请参考 [更多问题](./OtherInquiries.md)
 
 ## 联系我们
 
