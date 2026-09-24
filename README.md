@@ -1,5 +1,15 @@
 # Mirror酱服务集成指南
 
+## AI 接入
+
+本仓库提供 [Agent Skill](./.agents/skills/mirrorchyan-integration/SKILL.md)，AI 编程助手（如 Claude Code、Codex）会根据项目情况自行判断接入方式并完成接入：
+
+```bash
+npx skills add MirrorChyan/docs
+```
+
+也可以直接把该文件链接发给 AI。
+
 ## API 接口
 
 ### 接口基础信息
@@ -109,16 +119,6 @@ Mirror酱 提供不精确的日活统计功能，辅助开发者了解检查更�
 
 可在 网页跳转链接 中添加请求参数 `source`，反应用户从何处打开 Mirror酱 网站（并付费），对应为统计面板中的 `付费源`  
 建议的值为 app名-链接位置，例如 `https://mirrorchyan.com/zh/projects?rid=MAA&source=maa_github_release`, `https://mirrorchyan.com?source=maa_app_settings` 等
-
-## AI 接入
-
-本仓库提供 [Agent Skill](./.agents/skills/mirrorchyan-integration/SKILL.md)，AI 编程助手（如 Claude Code、Codex）会根据项目情况自行判断接入方式并完成接入：
-
-```bash
-npx skills add MirrorChyan/docs
-```
-
-也可以直接把该文件链接发给 AI。
 
 ## 常见问题
 
