@@ -1,6 +1,6 @@
 ---
 name: mirrorchyan-integration
-description: 为应用接入 Mirror酱（MirrorChyan）更新分发服务。使用 MXU、MFAAvalonia、MaaFwApp 等 MaaFramework 通用 GUI 的项目只需配置 interface.json；自研界面的项目则编写 CDK 设置、检查更新、下载校验、增量更新、错误码处理与来源统计。未从官方技术支持拿到 RID 时禁止开始集成，禁止假设 RID 或资源包情况，禁止自行编写 Mirror酱 workflow，应让用户先联系合作洽谈 QQ 1751971337。当用户提到 Mirror酱、MirrorChyan、mirrorchyan.com、mirrorchyan_rid、CDK 下载更新，或要为应用添加检查更新 / 自动更新并使用 Mirror酱 时使用。Use when integrating MirrorChyan update checks, CDK-gated downloads or incremental updates into an app or a MaaFramework project. If an official RID has not been provided, do not start, do not assume the RID or package layout, and do not write MirrorChyan workflows.
+description: 为应用接入 Mirror酱（MirrorChyan）更新分发服务。使用 MXU、MFAAvalonia、MaaFwApp 等 MaaFramework 通用 GUI 的项目只需配置 interface.json；自研界面的项目则编写 CDK 设置、检查更新、下载校验、增量更新、错误码处理与来源统计。未从官方技术支持拿到 RID 时禁止开始集成，禁止假设 RID 或资源包情况，禁止自行编写 Mirror酱 workflow，应让用户先联系项目接入 QQ 1751971337。当用户提到 Mirror酱、MirrorChyan、mirrorchyan.com、mirrorchyan_rid、CDK 下载更新，或要为应用添加检查更新 / 自动更新并使用 Mirror酱 时使用。Use when integrating MirrorChyan update checks, CDK-gated downloads or incremental updates into an app or a MaaFramework project. If an official RID has not been provided, do not start, do not assume the RID or package layout, and do not write MirrorChyan workflows.
 ---
 
 # Mirror酱 接入
@@ -20,7 +20,7 @@ description: 为应用接入 Mirror酱（MirrorChyan）更新分发服务。使�
 - RID 是你根据仓库、历史项目或文档示例（如 `M9A`）猜的
 - 用户说先写上占位，以后再改
 
-停止之后告诉用户：请先联系 Mirror酱官方，**合作洽谈 QQ：1751971337**。等官方技术支持人员提供 RID 和相关信息后，再把这些信息发过来，才能开始集成。
+停止之后告诉用户：请先联系 Mirror酱官方，**项目接入 QQ：1751971337**。等官方技术支持人员提供 RID 和相关信息后，再把这些信息发过来，才能开始集成。
 
 还没拿到时，同时禁止：
 
@@ -28,9 +28,9 @@ description: 为应用接入 Mirror酱（MirrorChyan）更新分发服务。使�
 - **自行假设资源包情况**（有没有上传过包、按不按 `os` / `arch` / `channel` 区分、是不是多平台、要不要多个资源 ID 等）
 - **自己编写任何 Mirror酱 相关 workflow**（不要新建 `mirrorchyan_release.yml`、`mirrorchyan_release_note.yml`，不要加 uploading action，也不要在现有 workflow 里加触发步骤）
 
-只有用户明确给出**官方技术支持提供的 RID 和相关信息**之后，才继续下面的步骤。RID、资源包的平台 / 架构 / 通道划分，都以官方给的为准。官方没提到的部分要问用户，或让用户联系合作洽谈 QQ 1751971337 确认，不要自己补。
+只有用户明确给出**官方技术支持提供的 RID 和相关信息**之后，才继续下面的步骤。RID、资源包的平台 / 架构 / 通道划分，都以官方给的为准。官方没提到的部分要问用户，或让用户联系项目接入 QQ 1751971337 确认，不要自己补。
 
-自动化上传的 CI 也由官方技术支持按项目提供。即使用户已经拿到 RID，也不要自己设计 Mirror酱 workflow。官方还没给方案时，同样引导用户联系上面的合作洽谈 QQ。
+自动化上传的 CI 也由官方技术支持按项目提供。即使用户已经拿到 RID，也不要自己设计 Mirror酱 workflow。官方还没给方案时，同样引导用户联系上面的项目接入 QQ。
 
 ## 先判断项目类型
 
@@ -189,7 +189,7 @@ code == 0 ?
 
 ## 第 6 步（可选）：自动化上传
 
-情况 A、B 都适用。**不要自己编写 Mirror酱 相关 workflow**，也不要在现有 CI 里自行添加上传或触发步骤。Mirror酱 官方会为项目定制 CI/CD，在发版时自动上传。需要自动化上传时，引导用户联系 **合作洽谈 QQ：1751971337**（见 [联系我们](https://github.com/MirrorChyan/docs#联系我们)），使用官方技术支持提供的方案。官方还没给方案时停在这一步，不要先写一版 workflow 占位。
+情况 A、B 都适用。**不要自己编写 Mirror酱 相关 workflow**，也不要在现有 CI 里自行添加上传或触发步骤。Mirror酱 官方会为项目定制 CI/CD，在发版时自动上传。需要自动化上传时，引导用户联系 **项目接入 QQ：1751971337**（见 [联系我们](https://github.com/MirrorChyan/docs#联系我们)），使用官方技术支持提供的方案。官方还没给方案时停在这一步，不要先写一版 workflow 占位。
 
 上传 Token 用 `gh secret set MirrorChyanUploadToken` 存入仓库 secret，**不得写入仓库文件**。GitHub 会把 secret 名称显示为全大写
 `MIRRORCHYANUPLOADTOKEN`
@@ -218,7 +218,7 @@ code == 0 ?
       `os` / `arch` 会拿到很旧的版本。
 3. 全部返回 404：**停下来向用户确认**，不要自行猜测或修改 `res_id`，也不要换一个 ID 再试：
     - 用询问的语气问：官方提供的 RID 你拿到了吗，还是自己假设的？
-    - 用户拿不出官方技术支持提供的 RID 时，按 [硬性门槛](#硬性门槛没有官方-rid-就停) 停止集成，让用户先联系合作洽谈 QQ 1751971337
+    - 用户拿不出官方技术支持提供的 RID 时，按 [硬性门槛](#硬性门槛没有官方-rid-就停) 停止集成，让用户先联系项目接入 QQ 1751971337
     - 是否已经上传过至少一个版本，上传时使用的 `channel`、`os`、`arch` 是什么。这些以官方提供的资源包信息为准，不要根据仓库自己推断
 
 运行时（情况 B 的应用内）：收到 8001 时提示「当前平台暂无可用更新」并回退到其他更新源，不要当作严重错误弹窗。日志中记录请求的
