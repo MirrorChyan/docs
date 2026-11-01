@@ -46,7 +46,7 @@ GET https://mirrorchyan.com/api/resources/{res_id}/latest
 
 成功响应包含最新版本号；有可用更新且 CDK 有效时，返回带时效的下载地址。**没有 `url` 不等于请求失败，也不能据此判断没有新版本。**
 
-- [可执行的请求示例](./QuickStart.md#自研客户端)
+- [首次请求指引](./QuickStart.md#自研客户端)
 - [请求参数、响应字段和客户端处理](./Integration.md#api-接口)
 - [完整 API 文档](https://apifox.com/apidoc/shared-ffdc8453-597d-4ba6-bd3c-5e375c10c789/253583257e0)
 - [错误代码表](./ErrorCode.md)

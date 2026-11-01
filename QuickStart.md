@@ -51,25 +51,9 @@ RID 不能根据仓库名、项目名或其他项目的示例猜测。资源包�
 
 ### 1. 发起第一次请求
 
-取得官方资源信息、确认首个版本已可用后，在 Bash 中运行以下示例（Windows 可使用 Git Bash）。按提示输入官方提供的值；不区分系统或架构的资源，对应项留空。
+我们通常会在接入 PR 中提供适合你项目的请求 URL 示例。确认首个版本已可用后，直接复制示例 URL 到浏览器打开，或使用 `curl` 请求即可。
 
-```bash
-read -r -p "官方分配的 RID: " MIRROR_RID
-read -r -p "本地当前版本号: " MIRROR_VERSION
-read -r -p "官方约定的 os（不区分则留空）: " MIRROR_OS
-read -r -p "官方约定的 arch（不区分则留空）: " MIRROR_ARCH
-read -r -p "更新通道（stable / beta / alpha，留空为 stable）: " MIRROR_CHANNEL
-
-curl --get --silent --show-error --max-time 15 \
-  "https://mirrorchyan.com/api/resources/${MIRROR_RID}/latest" \
-  --data-urlencode "current_version=${MIRROR_VERSION}" \
-  --data-urlencode "os=${MIRROR_OS}" \
-  --data-urlencode "arch=${MIRROR_ARCH}" \
-  --data-urlencode "channel=${MIRROR_CHANNEL:-stable}" \
-  --data-urlencode "user_agent=myapp_desktop"
-```
-
-该请求不携带 CDK，也不会下载更新包。空的 `os` / `arch` 与不传对应参数等效；按平台上传的资源必须填写官方约定的系统和架构。
+首次检查版本无需填写 CDK；RID、系统、架构和通道参数以接入 PR 中的示例为准。需要了解参数含义时，再查看[请求参数说明](./Integration.md#请求参数)。
 
 ### 2. 确认请求成功
 
@@ -89,7 +73,7 @@ curl --get --silent --show-error --max-time 15 \
 | 看到的结果 | 下一步 |
 | --- | --- |
 | `code` 为 `0`，且有 `data.version_name` | 版本检查已跑通，与项目实际发布版本核对 |
-| 没有 `url` | 本示例未填写 CDK，属于预期行为；不影响检查版本 |
+| 没有 `url` | 未填写 CDK 时属于预期行为，不影响检查版本 |
 | HTTP 404，`code` 为 `8001` | 核对 RID、首个包是否可用、平台及通道，见[排查步骤](./FAQ.md#返回-404code-8001怎么排查) |
 | 其他错误或网络失败 | 查看[错误代码表](./ErrorCode.md)，记录不含密钥的请求参数 |
 

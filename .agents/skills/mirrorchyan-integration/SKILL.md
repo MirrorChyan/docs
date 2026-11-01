@@ -112,7 +112,7 @@ GET https://mirrorchyan.com/api/resources/{res_id}/latest
 | `channel`         | query | `stable`（默认）/ `beta` / `alpha`                                                |
 | `user_agent`      | query | 客户端标识，对应统计面板中的「签到源」。`mirrorchyan_web` 为保留值，不要使用                               |
 
-首次请求示例见 [快速开始](https://github.com/MirrorChyan/docs/blob/main/QuickStart.md#自研客户端)。使用用户提供的官方 RID 和平台信息，不携带 CDK 验证版本检查，不借用其他项目的 RID 或示例密钥。
+首次请求优先使用官方接入 PR 提供的请求 URL 示例，见 [快速开始](https://github.com/MirrorChyan/docs/blob/main/QuickStart.md#自研客户端)。没有示例时，使用用户提供的官方 RID 和平台信息构造请求；不携带 CDK 验证版本检查，不借用其他项目的 RID 或示例密钥。
 
 要求：
 
