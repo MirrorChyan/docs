@@ -5,7 +5,7 @@ description: 为应用接入 Mirror酱（MirrorChyan）更新分发服务。使�
 
 # Mirror酱 接入
 
-权威文档：<https://github.com/MirrorChyan/docs>（README、ErrorCode.md、Incremental.md、FAQ.md）。本文与文档冲突时以文档为准。
+权威文档：<https://github.com/MirrorChyan/docs>。先阅读 [快速开始](https://github.com/MirrorChyan/docs/blob/main/QuickStart.md)选择接入路径；自研客户端参考 [客户端集成](https://github.com/MirrorChyan/docs/blob/main/Integration.md)，错误和更新包格式分别参考 ErrorCode.md、Incremental.md、FAQ.md。本文与文档冲突时以文档为准。
 
 ## 硬性门槛：没有官方 RID 就停
 
@@ -98,23 +98,21 @@ description: 为应用接入 Mirror酱（MirrorChyan）更新分发服务。使�
 
 ## 第 2 步：检查更新
 
-```
+```text
 GET https://mirrorchyan.com/api/resources/{res_id}/latest
 ```
 
 | 参数                | 位置    | 说明                                                                            |
 |-------------------|-------|-------------------------------------------------------------------------------|
 | `res_id`          | path  | 资源 ID，必填                                                                      |
-| `current_version` | query | 当前版本号，推荐传。需与上传时的版本名格式一致（如都带 `v`），命中时返回增量包，否则返回全量包                             |
+| `current_version` | query | 当前版本号，推荐传。需与上传时的版本名格式一致（如都带 `v`），用于选择可用增量包；不保证一定返回增量包，以 `update_type` 为准 |
 | `cdk`             | query | 用户 CDK，未填写时不传                                                                 |
 | `os`              | query | `windows` / `linux` / `darwin` / `android`；也接受 `win`、`macos` 等别名。资源不区分系统时不传   |
 | `arch`            | query | `386` / `amd64` / `arm` / `arm64`；也接受 `x64`、`x86_64`、`aarch64` 等别名。资源不区分架构时不传 |
 | `channel`         | query | `stable`（默认）/ `beta` / `alpha`                                                |
 | `user_agent`      | query | 客户端标识，对应统计面板中的「签到源」。`mirrorchyan_web` 为保留值，不要使用                               |
 
-```bash
-curl "https://mirrorchyan.com/api/resources/M9A/latest?current_version=v0.0.1&cdk=XXXXX&user_agent=M9A_APP"
-```
+首次请求示例见 [快速开始](https://github.com/MirrorChyan/docs/blob/main/QuickStart.md#自研客户端)。使用用户提供的官方 RID 和平台信息，不携带 CDK 验证版本检查，不借用其他项目的 RID 或示例密钥。
 
 要求：
 
@@ -136,7 +134,7 @@ curl "https://mirrorchyan.com/api/resources/M9A/latest?current_version=v0.0.1&cd
 | `url`                     | 带时效的下载地址，**仅在有新版本且 CDK 有效时返回**。拿到后尽快下载，不要缓存 |
 | `sha256` / `filesize`     | 下载后校验完整性 / 显示进度                             |
 | `update_type`             | `incremental`（增量）或 `full`（全量）               |
-| `channel` / `os` / `arch` | 返回的包对应的通道 / 系统 / 架构                         |
+| `channel` / `os` / `arch` | 本次查询的通道 / 系统 / 架构                         |
 | `custom_data`             | 开发者上传时附带的自定义数据                              |
 | `cdk_expired_time`        | CDK 到期时间戳，可用于提示续费                           |
 
@@ -161,7 +159,7 @@ CDK 相关错误（7001–7005）不应影响用户通过其他渠道获取更�
 
 ## 第 4 步：比较版本并下载
 
-```
+```text
 code == 0 ?
 ├─ 否 → 按错误码提示
 └─ 是 → version_name 比 current_version 新？
@@ -173,19 +171,19 @@ code == 0 ?
 
 - 按 [SemVer](https://semver.org/lang/zh-CN/) 比较，忽略前缀 `v`，正确处理预发布版本（如 `1.2.0-beta.1`）。项目不使用 SemVer
   时，与用户确认比较规则，**不要直接比较字符串**。
-- 下载请求返回非 2xx 时，按 JSON 解析 `code` / `msg` 并提示。
+- 下载请求返回非 2xx 时，有 JSON 错误体则解析 `code` / `msg`，否则按下载失败处理，不能假设错误响应总是 JSON。
 - `sha256` 校验失败时丢弃文件，不得安装。
 
 ## 第 5 步：安装更新
 
-1. 解压到临时目录。
+1. 解压到临时目录，在修改安装目录前校验所有路径，并准备好退出主程序或由独立更新进程替换文件。
 2. 若包内存在 `changes.json`，删除安装目录中 `deleted` 列出的文件和 `deleted_dir`
-   列出的目录。字段说明见 [Incremental.md](https://github.com/MirrorChyan/docs/blob/main/Incremental.md)，路径以 `/`
-   分隔，相对于包根目录。
+   列出的目录，目录按从深到浅的顺序处理。字段说明见 [Incremental.md](https://github.com/MirrorChyan/docs/blob/main/Incremental.md)，路径以 `/`
+   分隔，相对于包根目录。缺失字段按空列表处理，删除失败时不能直接报告成功。
 3. 用新文件覆盖安装目录。
-4. 程序本身正在运行时（常见于 Windows），先将其重命名，写入新文件，下次启动时再删除旧文件。重命名不受文件占用限制。
+4. 全部操作成功后再记录新版本。若项目采用重命名旧文件、下次启动清理的方案，需处理重命名失败；能否重命名取决于系统和文件打开方式，不能假设一定不受占用限制。
 
-**安全**：解压条目和 `changes.json` 中的每个路径都必须解析到安装目录之内，拒绝 `..` 和绝对路径。
+**安全**：解压条目和 `changes.json` 中的每个路径都必须解析到对应目标目录之内，拒绝 `..`、绝对路径、盘符和 UNC 路径，并检查符号链接，避免越界写入或删除。
 
 ## 第 6 步（可选）：自动化上传
 
