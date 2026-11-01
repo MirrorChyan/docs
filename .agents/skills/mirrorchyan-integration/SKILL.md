@@ -1,67 +1,49 @@
 ---
 name: mirrorchyan-integration
-description: 为应用接入 Mirror酱（MirrorChyan）更新分发服务。使用 MXU、MFAAvalonia、MaaFwApp 等 MaaFramework 通用 GUI 的项目只需配置 interface.json；自研界面的项目则编写 CDK 设置、检查更新、下载校验、增量更新、错误码处理与来源统计。未从官方技术支持拿到 RID 时禁止开始集成，禁止假设 RID 或资源包情况，禁止自行编写 Mirror酱 workflow，应让用户先联系项目接入 QQ 1751971337。当用户提到 Mirror酱、MirrorChyan、mirrorchyan.com、mirrorchyan_rid、CDK 下载更新，或要为应用添加检查更新 / 自动更新并使用 Mirror酱 时使用。Use when integrating MirrorChyan update checks, CDK-gated downloads or incremental updates into an app or a MaaFramework project. If an official RID has not been provided, do not start, do not assume the RID or package layout, and do not write MirrorChyan workflows.
+description: 为应用接入 Mirror酱（MirrorChyan）更新分发服务。优先读取官方接入 PR 或交付说明，复用已支持 Mirror酱 的 GUI 更新能力，或为自研客户端实现版本检查、CDK 设置、下载校验及对应包型的安装流程。未取得官方 RID 时不开始集成，不猜测 RID 或资源包情况，不自行设计上传工作流，应引导联系项目接入 QQ 1751971337。当用户提到 Mirror酱、MirrorChyan、mirrorchyan.com、mirrorchyan_rid、CDK 下载更新，或要为应用添加检查更新 / 自动更新并使用 Mirror酱 时使用。Use when integrating MirrorChyan update checks, CDK-gated downloads or incremental updates into an app or a MaaFramework project. Read the official onboarding PR first; do not invent the RID, package mapping or upload workflows.
 ---
 
 # Mirror酱 接入
 
-权威文档：<https://github.com/MirrorChyan/docs>（README、ErrorCode.md、Incremental.md、FAQ.md）。本文与文档冲突时以文档为准。
+权威文档：<https://github.com/MirrorChyan/docs>。先阅读 [快速开始](https://github.com/MirrorChyan/docs/blob/main/QuickStart.md)选择接入路径；自研客户端参考 [客户端集成](https://github.com/MirrorChyan/docs/blob/main/Integration.md)，错误和更新包格式分别参考 ErrorCode.md、Incremental.md、FAQ.md。本文与文档冲突时以文档为准。
 
 ## 硬性门槛：没有官方 RID 就停
 
-在判断项目类型、修改代码、修改 `interface.json`、请求接口或编写任何 Mirror酱 相关逻辑之前，先用询问的语气确认 RID 是不是官方给的。例如：
+先读取用户提供的**官方接入 PR 或交付说明**，提取 RID、发布包与平台的映射、GUI 配置及请求 URL 示例。信息已经给出时直接使用，不要求用户重复填写或证明，也不根据仓库名改写 RID。
 
-> 官方提供的 RID 你拿到了吗？还是目前只是自己按仓库名、项目名假设的，或者还没跟官方对过？
+尚未取得官方 RID 时，不修改客户端接入逻辑、不填写占位 RID，也不猜测资源包划分。引导用户把仓库地址及希望分发的 Release 包发给**项目接入 QQ：1751971337**，由官方确认资源信息并提供方案。
 
-下面任一情况都算**还没拿到 RID**，必须立刻停止，**禁止开始集成**：
+官方会适配上传、更新日志同步及触发方式，实际运行验证后提交接入 PR。开发者主要确认分发内容，在自己的仓库配置 `MirrorChyanUploadToken`，审阅并合并 PR；自研客户端再按下面的步骤接入 API。
 
-- 用户没有给出 RID
-- 用户说「应该就是仓库名 / 项目名 / 包名前缀」，或让你看着仓库自己定
-- RID 是你根据仓库、历史项目或文档示例（如 `M9A`）猜的
-- 用户说先写上占位，以后再改
-
-停止之后告诉用户：请先联系 Mirror酱官方，**项目接入 QQ：1751971337**。等官方技术支持人员提供 RID 和相关信息后，再把这些信息发过来，才能开始集成。
-
-还没拿到时，同时禁止：
-
-- **自行假设 RID**
-- **自行假设资源包情况**（有没有上传过包、按不按 `os` / `arch` / `channel` 区分、是不是多平台、要不要多个资源 ID 等）
-- **自己编写任何 Mirror酱 相关 workflow**（不要新建 `mirrorchyan_release.yml`、`mirrorchyan_release_note.yml`，不要加 uploading action，也不要在现有 workflow 里加触发步骤）
-
-只有用户明确给出**官方技术支持提供的 RID 和相关信息**之后，才继续下面的步骤。RID、资源包的平台 / 架构 / 通道划分，都以官方给的为准。官方没提到的部分要问用户，或让用户联系项目接入 QQ 1751971337 确认，不要自己补。
-
-自动化上传的 CI 也由官方技术支持按项目提供。即使用户已经拿到 RID，也不要自己设计 Mirror酱 workflow。官方还没给方案时，同样引导用户联系上面的项目接入 QQ。
+**不要自行设计 Mirror酱 上传工作流或触发步骤。** 已有官方 PR 时以其改动为准，缺少信息时只询问缺失部分。API 请求用于客户端联调，不能以 `latest` 返回 404 为由否认已由官方提供的 RID。
 
 ## 先判断项目类型
 
 | 迹象                                                                                                                                                                                                                     | 类型              |
 |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------|
-| 项目基于 MaaFramework，有带 `interface_version` 的 `interface.json`，发版时打包 [MXU](https://github.com/MistEO/MXU)、[MFAAvalonia](https://github.com/MaaXYZ/MFAAvalonia)、[MaaFwApp](https://github.com/Aliothmoon/MaaFwApp) 等通用 GUI | **情况 A：通用 GUI** |
+| 项目使用当前版本已支持 Mirror酱 的通用 GUI，如 [MXU](https://github.com/MistEO/MXU)、[MFAAvalonia](https://github.com/MaaXYZ/MFAAvalonia)；其他 GUI 先核对对应版本文档和接入 PR | **情况 A：通用 GUI** |
 | 项目有自己的界面和代码，如 [MAA](https://github.com/MaaAssistantArknights/MaaAssistantArknights)                                                                                                                                    | **情况 B：自研界面**   |
 
 无法判断时询问用户。
 
-### 情况 A：通用 GUI —— 只需配置 `interface.json`
+### 情况 A：通用 GUI —— 复用内置更新能力
 
 通用 GUI 已内置 Mirror酱 的检查更新、CDK 设置和下载安装。**不要编写任何更新逻辑。**
 还没拿到官方 RID 时，连 `interface.json` 也不要改，按 [硬性门槛](#硬性门槛没有官方-rid-就停) 停下来。
-拿到官方信息后，按 [ProjectInterface V2 协议](https://github.com/MaaXYZ/MaaFramework/blob/main/docs/zh_cn/3.3-ProjectInterfaceV2协议.md)
-在 `interface.json` 中填写：
+拿到官方信息后，先核对接入 PR 中已有的配置，避免重复修改。对于读取 `interface.json` 更新配置的 GUI，按 [ProjectInterface V2 协议](https://github.com/MaaXYZ/MaaFramework/blob/main/docs/zh_cn/3.3-ProjectInterfaceV2协议.md)检查以下字段；其他 GUI 按其自身文档和接入 PR 配置：
 
 | 字段                          | 说明                                                                            |
 |-----------------------------|-------------------------------------------------------------------------------|
 | `mirrorchyan_rid`           | 资源 ID（即 `res_id`）。只能填官方技术支持提供的值，不要用仓库名、项目名或包名前缀代替。还没拿到就不要配置 |
-| `mirrorchyan_multiplatform` | 按官方说明的上传方式填写。各系统 / 架构分别上传不同的包时设为 `true`，GUI 会在请求中带上 `os` / `arch`；所有平台共用一个包时设为 `false` 或不填。不要自己看 Release 产物猜测 |
-| `version`                   | 项目版本号，GUI 用它检查更新。发版时需与 tag 及上传到 Mirror酱 的版本名一致                                |
+| `mirrorchyan_multiplatform` | 对支持此字段的 GUI，上传指定了 `os` 或 `arch` 时为 `true`；两者都为空时为 `false` 或不填。以接入 PR 为准，不自行猜测 |
+| `version`                   | 若 GUI 用此字段检查更新，需与 tag 及上传版本名一致；不能假设所有 GUI 都以此字段为版本来源 |
 | `github`                    | 项目 GitHub 仓库地址，用于版本更新检查和问题反馈                                                  |
 
 注意：
 
-- 按协议约定，通用 GUI 只更新资源版本，不单独更新 UI 本体或 MaaFramework。发版时由项目自行打包指定版本的 UI 和
-  MaaFramework。
+- GUI 的版本来源、平台参数和更新范围以实际使用版本为准，不能一律视为只更新资源。APK 项目需整体重新出包，不能套用桌面 ZIP 的解压覆盖流程，见 [MaaFwApp 接入文档](https://github.com/Aliothmoon/MaaFwApp/blob/main/INTEGRATION.md)。
 - 同时发布多个通用 GUI 的版本时，每个 GUI 需要单独的资源
-  ID，见 [FAQ.md](https://github.com/MirrorChyan/docs/blob/main/FAQ.md)。MaaFwApp 可在 `pi-profile.yaml` 的
-  `update.mirrorchyanRid` 中单独指定，覆盖 `interface.json` 中的值。
+  ID，见 [FAQ.md](https://github.com/MirrorChyan/docs/blob/main/FAQ.md)。ZIP 与 APK / EXE 安装包也需使用不同 RID，由官方按包型及用途划分。
 - `mirrorchyan_multiplatform` 必须与实际上传方式一致，否则检查更新会返回
   404，见 [返回 404（code 8001）时的排查](#返回-404code-8001时的排查)。
 - 字段以协议文档和对应 GUI 的文档为准，如有出入以它们为准。
@@ -85,10 +67,9 @@ description: 为应用接入 Mirror酱（MirrorChyan）更新分发服务。使�
 | 更新通道            | 以官方说明为准。官方没说明时问用户是否区分正式版 / 测试版                  | `channel`           |
 | 客户端标识           | 与用户商定，如 `MAA_WPF`                                | `user_agent`（签到源统计） |
 | 现有更新机制          | 项目内（如 GitHub Releases 检查）                        | 作为回退下载源             |
-| 安装包形态           | zip / tar.gz；程序运行时能否替换自身                         | 安装更新                |
+| 安装包形态           | 按交付方案区分 ZIP 等归档资源与 APK / EXE 安装包；程序运行时能否替换自身 | 选择增量 / 全量和安装流程 |
 
-确认后，先不带 CDK 用 curl 实际请求一次接口。返回 404 时按 [返回 404（code 8001）时的排查](#返回-404code-8001时的排查)
-处理，确认用户已接入且参数正确后再继续。
+确认后，优先使用交付的 URL 示例联调客户端。返回 404 时按 [返回 404（code 8001）时的排查](#返回-404code-8001时的排查)核对可用版本和参数，不把 API 响应当作官方 RID 是否成立的证明。
 
 ## 第 1 步：设置项
 
@@ -98,23 +79,21 @@ description: 为应用接入 Mirror酱（MirrorChyan）更新分发服务。使�
 
 ## 第 2 步：检查更新
 
-```
+```text
 GET https://mirrorchyan.com/api/resources/{res_id}/latest
 ```
 
 | 参数                | 位置    | 说明                                                                            |
 |-------------------|-------|-------------------------------------------------------------------------------|
 | `res_id`          | path  | 资源 ID，必填                                                                      |
-| `current_version` | query | 当前版本号，推荐传。需与上传时的版本名格式一致（如都带 `v`），命中时返回增量包，否则返回全量包                             |
+| `current_version` | query | ZIP 增量更新传本地版本，格式需与上传版本名一致；请求完整包时留空，APK / EXE 安装包留空。不保证一定返回增量包，以 `update_type` 为准 |
 | `cdk`             | query | 用户 CDK，未填写时不传                                                                 |
 | `os`              | query | `windows` / `linux` / `darwin` / `android`；也接受 `win`、`macos` 等别名。资源不区分系统时不传   |
 | `arch`            | query | `386` / `amd64` / `arm` / `arm64`；也接受 `x64`、`x86_64`、`aarch64` 等别名。资源不区分架构时不传 |
 | `channel`         | query | `stable`（默认）/ `beta` / `alpha`                                                |
 | `user_agent`      | query | 客户端标识，对应统计面板中的「签到源」。`mirrorchyan_web` 为保留值，不要使用                               |
 
-```bash
-curl "https://mirrorchyan.com/api/resources/M9A/latest?current_version=v0.0.1&cdk=XXXXX&user_agent=M9A_APP"
-```
+首次请求优先使用官方接入 PR 提供的请求 URL 示例，见 [快速开始](https://github.com/MirrorChyan/docs/blob/main/QuickStart.md#自研客户端)。没有示例时，使用用户提供的官方 RID 和平台信息构造请求；不携带 CDK 验证版本检查，不借用其他项目的 RID 或示例密钥。
 
 要求：
 
@@ -136,7 +115,7 @@ curl "https://mirrorchyan.com/api/resources/M9A/latest?current_version=v0.0.1&cd
 | `url`                     | 带时效的下载地址，**仅在有新版本且 CDK 有效时返回**。拿到后尽快下载，不要缓存 |
 | `sha256` / `filesize`     | 下载后校验完整性 / 显示进度                             |
 | `update_type`             | `incremental`（增量）或 `full`（全量）               |
-| `channel` / `os` / `arch` | 返回的包对应的通道 / 系统 / 架构                         |
+| `channel` / `os` / `arch` | 本次查询的通道 / 系统 / 架构                         |
 | `custom_data`             | 开发者上传时附带的自定义数据                              |
 | `cdk_expired_time`        | CDK 到期时间戳，可用于提示续费                           |
 
@@ -161,7 +140,7 @@ CDK 相关错误（7001–7005）不应影响用户通过其他渠道获取更�
 
 ## 第 4 步：比较版本并下载
 
-```
+```text
 code == 0 ?
 ├─ 否 → 按错误码提示
 └─ 是 → version_name 比 current_version 新？
@@ -173,19 +152,21 @@ code == 0 ?
 
 - 按 [SemVer](https://semver.org/lang/zh-CN/) 比较，忽略前缀 `v`，正确处理预发布版本（如 `1.2.0-beta.1`）。项目不使用 SemVer
   时，与用户确认比较规则，**不要直接比较字符串**。
-- 下载请求返回非 2xx 时，按 JSON 解析 `code` / `msg` 并提示。
+- 下载请求返回非 2xx 时，有 JSON 错误体则解析 `code` / `msg`，否则按下载失败处理，不能假设错误响应总是 JSON。
 - `sha256` 校验失败时丢弃文件，不得安装。
 
 ## 第 5 步：安装更新
 
-1. 解压到临时目录。
-2. 若包内存在 `changes.json`，删除安装目录中 `deleted` 列出的文件和 `deleted_dir`
-   列出的目录。字段说明见 [Incremental.md](https://github.com/MirrorChyan/docs/blob/main/Incremental.md)，路径以 `/`
-   分隔，相对于包根目录。
-3. 用新文件覆盖安装目录。
-4. 程序本身正在运行时（常见于 Windows），先将其重命名，写入新文件，下次启动时再删除旧文件。重命名不受文件占用限制。
+APK、EXE 等安装包按完整包分发，校验后交给对应安装流程，不解压或处理 `changes.json`。以下步骤仅适用于 ZIP 等归档资源：
 
-**安全**：解压条目和 `changes.json` 中的每个路径都必须解析到安装目录之内，拒绝 `..` 和绝对路径。
+1. 解压到临时目录，在写入每个条目前校验目标路径和链接，再校验 `changes.json`；通过后才准备退出主程序或由独立更新进程替换安装文件。
+2. 若包内存在 `changes.json`，删除安装目录中 `deleted` 列出的文件和 `deleted_dir`
+   列出的目录，目录按从深到浅的顺序处理。字段说明见 [Incremental.md](https://github.com/MirrorChyan/docs/blob/main/Incremental.md)，路径以 `/`
+   分隔，相对于包根目录。缺失字段按空列表处理，删除失败时不能直接报告成功。
+3. 用新文件覆盖安装目录。
+4. 全部操作成功后再记录新版本。失败或中断后恢复完整旧版本，或停止增量更新并通过干净的全量安装恢复，不能仅保留旧版本号后继续叠加增量包。若采用重命名旧文件的方案，需处理重命名失败；能否重命名取决于系统和文件打开方式，不能假设一定不受占用限制。
+
+**安全**：解压条目和 `changes.json` 中的每个路径都必须解析到对应目标目录之内，拒绝 `..`、绝对路径、盘符和 UNC 路径，并检查符号链接，避免越界写入或删除。
 
 ## 第 6 步（可选）：自动化上传
 
@@ -216,19 +197,14 @@ code == 0 ?
    `mirrorchyan_multiplatform`），并确认目标通道确实上传过版本。
     - 两种组合都返回时，以 `version_name` 与项目最新发版一致的为准。从不区分平台改为按平台上传的项目，可能还留着旧的不分平台的包，不带
       `os` / `arch` 会拿到很旧的版本。
-3. 全部返回 404：**停下来向用户确认**，不要自行猜测或修改 `res_id`，也不要换一个 ID 再试：
-    - 用询问的语气问：官方提供的 RID 你拿到了吗，还是自己假设的？
-    - 用户拿不出官方技术支持提供的 RID 时，按 [硬性门槛](#硬性门槛没有官方-rid-就停) 停止集成，让用户先联系项目接入 QQ 1751971337
-    - 是否已经上传过至少一个版本，上传时使用的 `channel`、`os`、`arch` 是什么。这些以官方提供的资源包信息为准，不要根据仓库自己推断
+3. 全部返回 404：核对交付方案中的可用版本和平台 / 通道映射，必要时联系项目接入 QQ 1751971337。已经有官方 RID 时，不重复要求用户证明来源，不自行换 RID。尚未取得官方资源信息时，按 [硬性门槛](#硬性门槛没有官方-rid-就停)引导联系官方，不按仓库名或构建产物猜测。
 
 运行时（情况 B 的应用内）：收到 8001 时提示「当前平台暂无可用更新」并回退到其他更新源，不要当作严重错误弹窗。日志中记录请求的
 `os` / `arch` / `channel`（不含 CDK），便于排查。
 
 ## 验收清单
 
-情况 A：确认 `interface.json`
-能通过 [schema](https://github.com/MaaXYZ/MaaFramework/blob/main/tools/interface.schema.json) 校验，`mirrorchyan_rid` 和
-`version` 已正确填写，并在 GUI 中实际检查一次更新。返回 404 时按上一节排查。
+情况 A：按接入 PR 和对应 GUI 文档确认配置，并在 GUI 中实际检查一次更新。使用 `interface.json` 的项目还需通过 [schema](https://github.com/MaaXYZ/MaaFramework/blob/main/tools/interface.schema.json)校验。返回 404 时按上一节排查，APK 项目按对应版本的完整安装包流程验证。
 
 情况 B：完成后逐项确认，并向用户报告结果：
 
@@ -239,4 +215,5 @@ code == 0 ?
 - [ ] 已是最新版本：不提示更新。
 - [ ] 在日志、配置导出和崩溃报告中搜索 CDK，确认没有明文。
 - [ ] `user_agent` 和跳转链接的 `source` 已按约定设置。
-- [ ] 增量更新：`deleted` 中的文件被删除，路径越界的条目被拒绝。
+- [ ] ZIP 更新：`deleted` 中的文件被删除，路径越界的条目在写入前被拒绝；中断后可恢复完整版本。
+- [ ] APK / EXE 更新：使用完整安装包和对应安装流程，不套用 ZIP 增量逻辑。
