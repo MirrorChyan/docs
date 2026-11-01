@@ -2,37 +2,36 @@
 
 [返回首页](./README.md) · [客户端集成](./Integration.md) · [常见问题](./FAQ.md)
 
-本页帮助你选定接入路径，完成第一次版本检查。通用 GUI 项目可直接使用内置更新能力；自研客户端先验证 API，再接入应用。
+先把仓库地址发给我们，我们会适配发布流程、验证上传并提交接入 PR。你确认分发内容、配置仓库 Token 并合并 PR 后，再按项目类型验证客户端更新。
 
 ## 开始前准备
 
-联系**项目接入 QQ：1751971337**，提供[项目信息](./README.md#联系我们)，由官方确认：
+联系**项目接入 QQ：1751971337**，提供 GitHub 仓库地址，以及希望分发的 Release 包。还没有 Release 时，先发布一个带实际产物的版本，方便我们适配。
 
-| 信息 | 用途 |
-| --- | --- |
-| 官方分配的 RID | API 的 `res_id`，或 GUI 的 `mirrorchyan_rid` |
-| 资源包是否区分系统、架构和更新通道 | 决定请求是否携带 `os`、`arch`、`channel` |
-| 首个版本是否已上传并可用 | 没有可用版本时，正确的 RID 也可能返回 404 |
-| 官方提供的自动化上传方案 | 后续发布时自动分发更新包 |
+| 环节 | 我们会做什么 | 你需要配合什么 |
+| --- | --- | --- |
+| 确认分发内容 | 分析发布包，确认 RID、系统 / 架构及包型划分 | 确认要分发哪些包，有多个 GUI 或安装包时一并说明 |
+| 适配发布流程 | 配置更新包上传、更新日志同步及触发方式，补充适用的 GUI 配置 | 说明现有发版方式和需要保留的行为 |
+| 验证并交付 | 实际运行上传与日志同步工作流验证，提交接入 PR，并提供请求 URL 示例 | 审阅 PR，在自己的仓库配置上传 Token 并合并 |
+| 验证客户端 | 提供对应的接入说明 | 使用 GUI 内置更新功能，或为自研客户端接入 API |
 
-RID 不能根据仓库名、项目名或其他项目的示例猜测。资源包划分和上传 CI/CD 均以官方方案为准；还没拿到时，先完成这一步。
+RID 和上传配置由我们随接入方案提供，无需自己猜测资源 ID、编写上传工作流或手动上传首个包。
 
-**验证版本检查不需要 CDK。** 验证实际下载时，再准备适用于该资源的有效 CDK。上传 Token 仅用于 CI，不能作为客户端 CDK 使用。
+## 收到接入 PR 后
+
+1. 确认 PR 中选择的发布包、平台和更新通道符合项目需要。
+2. 在**你自己的项目仓库**中[设置 `MirrorChyanUploadToken`](./FAQ.md#如何设置仓库的-mirrorchyanuploadtoken)，然后审阅并合并 PR。
+3. 后续照常发布版本，按 PR 约定自动上传更新包、同步更新日志。客户端验证按下面两条路径进行。
+
+上传 Token 仅用于 CI，用户 CDK 用于下载，二者不能混用。**检查版本不需要 CDK**；验证实际下载时，使用适用于该资源的有效 CDK。接入时提供的流程测试 CDK 不支持实际下载。
 
 ## 通用 GUI 项目
 
-适用于基于 MaaFramework、使用 [MXU](https://github.com/MistEO/MXU)、[MFAAvalonia](https://github.com/MaaXYZ/MFAAvalonia)、[MaaFwApp](https://github.com/Aliothmoon/MaaFwApp) 等通用 GUI 的项目。
+适用于使用已支持 Mirror酱 的 [MXU](https://github.com/MistEO/MXU)、[MFAAvalonia](https://github.com/MaaXYZ/MFAAvalonia) 等通用 GUI 的项目，无需重复实现 CDK 设置、版本检查和下载安装。
 
-这些 GUI 已内置 Mirror酱 的 CDK 设置、版本检查和下载安装能力，通常只需在项目已有的 `interface.json` 中配置以下字段：
+我们会在接入 PR 中补充适用的 GUI 配置，例如 `interface.json` 中的 `mirrorchyan_rid` 和平台选项。你按 PR 说明确认配置即可，发版时保持 GUI 使用的版本号与上传版本一致。
 
-| 字段 | 填写方式 |
-| --- | --- |
-| `mirrorchyan_rid` | 官方提供的 RID |
-| `mirrorchyan_multiplatform` | 按官方上传方案填写：系统 / 架构分别上传时为 `true`；共用一个包时为 `false` 或不填 |
-| `version` | 当前资源版本，与发布 tag 和上传到 Mirror酱 的版本名保持一致 |
-| `github` | 项目的 GitHub 仓库地址 |
-
-字段定义以 [ProjectInterface V2 协议](https://github.com/MaaXYZ/MaaFramework/blob/main/docs/zh_cn/3.3-ProjectInterfaceV2协议.md)和对应 GUI 文档为准。请修改已有配置，保留项目其他字段。
+各 GUI 的配置入口、版本来源和更新方式可能不同。`interface.json` 字段可查阅 [ProjectInterface V2 协议](https://github.com/MaaXYZ/MaaFramework/blob/main/docs/zh_cn/3.3-ProjectInterfaceV2协议.md)；MaaFwApp 等 APK 项目还需结合[对应 GUI 的接入文档](https://github.com/Aliothmoon/MaaFwApp/blob/main/INTEGRATION.md)和实际使用版本确认，不能直接套用桌面 ZIP 资源包的更新方式。
 
 配置后，在 GUI 中检查以下行为：
 
@@ -41,19 +40,19 @@ RID 不能根据仓库名、项目名或其他项目的示例猜测。资源包�
 3. 更新后再次检查，不重复提示同一版本。
 4. 不填 CDK 或网络失败时，现有更新入口仍可使用。
 
-返回 404 时，先核对 `mirrorchyan_multiplatform` 与实际上传方式，见[排查步骤](./FAQ.md#返回-404code-8001怎么排查)。
+返回 404 时，先对照接入 PR 核对平台配置；使用 `mirrorchyan_multiplatform` 的 GUI 还需检查这一字段，见[排查步骤](./FAQ.md#返回-404code-8001怎么排查)。
 
-同时发布多个 GUI 时，每个 GUI 使用独立 RID，见[多 GUI 发布](./FAQ.md#同时发布多个-gui需要几个-rid)。按协议约定，通用 GUI 更新的是资源版本，UI 本体和 MaaFramework 版本由项目发版时打包。
+同时发布多个 GUI 或不同包型时，我们会按用途规划独立 RID，见[多 GUI 发布](./FAQ.md#同时发布多个-gui需要几个-rid)。
 
-完成验证后，按官方方案配置[自动化上传](./README.md#自动化上传)，无需再实现下面的自研客户端流程。
+无需再实现下面的自研客户端流程。
 
 ## 自研客户端
 
 ### 1. 发起第一次请求
 
-我们通常会在接入 PR 中提供适合你项目的请求 URL 示例。确认首个版本已可用后，直接复制示例 URL 到浏览器打开，或使用 `curl` 请求即可。
+我们会在接入 PR 或交付说明中提供适合你项目的请求 URL 示例。直接复制示例 URL 到浏览器打开，或使用 `curl` 请求即可。
 
-首次检查版本无需填写 CDK；RID、系统、架构和通道参数以接入 PR 中的示例为准。需要了解参数含义时，再查看[请求参数说明](./Integration.md#请求参数)。
+RID、系统、架构和通道参数以交付示例为准。只检查版本时可以不传 `cdk`；示例包含流程测试 CDK 时，也不代表能用它实际下载。需要了解参数含义时，再查看[请求参数说明](./Integration.md#请求参数)。
 
 ### 2. 确认请求成功
 

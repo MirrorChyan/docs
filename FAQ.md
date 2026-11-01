@@ -6,13 +6,13 @@
 
 ### 还没拿到 RID，怎么开始？
 
-先联系**项目接入 QQ：1751971337**，提供项目地址、GUI / 客户端类型和发布平台，可使用[沟通模板](./README.md#联系我们)。官方会确认 RID、资源包划分和上传方案。
+把仓库地址和希望分发的 Release 包发给**项目接入 QQ：1751971337** 即可，可使用[沟通模板](./README.md#联系我们)。我们会确认 RID、资源包划分，适配并验证上传工作流后提交接入 PR，无需先自己填写 RID 或编写 CI。
 
 RID 是官方分配的资源 ID，不一定等于项目名或仓库名。拿到官方信息后，再配置客户端或请求接口。
 
 ### 使用通用 GUI，还需要自己写更新器吗？
 
-MXU、MFAAvalonia、MaaFwApp 等 MaaFramework 通用 GUI 已内置 Mirror酱 更新能力，通常只需[配置 `interface.json`](./QuickStart.md#通用-gui-项目)。自研客户端才需要实现[版本检查与下载安装](./Integration.md)。具体能力以使用的 GUI 版本及其文档为准。
+使用已支持 Mirror酱 的 MXU、MFAAvalonia 等 GUI 时，直接复用其内置能力，我们会在接入 PR 中补充[适用的配置](./QuickStart.md#通用-gui-项目)。具体支持范围、配置入口和更新包形态以使用的 GUI 版本及其文档为准；自研客户端才需要实现[版本检查与下载安装](./Integration.md)。
 
 ### 不填 CDK，也能检查更新吗？
 
@@ -37,7 +37,7 @@ CDK 是用户下载凭证；`MirrorChyanUploadToken` 是开发者上传凭证，
 按以下顺序核对：
 
 1. 确认使用的是官方提供的 RID，且首个版本已上传并可用。
-2. 对照官方上传方案检查 `os` / `arch`：按平台上传的包需要对应参数；不区分平台的包应不传或留空。通用 GUI 同时检查 `mirrorchyan_multiplatform`。
+2. 对照接入 PR 或交付的 URL 示例检查 `os` / `arch`：按平台上传的包需要对应参数；不区分平台的包应不传或留空。使用 `mirrorchyan_multiplatform` 的 GUI 同时检查这一字段。
 3. 确认请求通道有可用版本。默认 `stable` 只查正式版，测试版可能只在 `beta` / `alpha` 可见。
 4. 若需诊断，可在不带 CDK 的情况下临时用 `channel=alpha` 检查，并仅对照官方提供的平台配置；不要把这个诊断设置直接用于正式用户。
 5. 仍无法定位时，向项目接入 QQ 提供 RID、系统、架构、通道及上传记录，请官方核对，不要尝试猜测其他 RID。
@@ -50,7 +50,9 @@ CDK 是用户下载凭证；`MirrorChyanUploadToken` 是开发者上传凭证，
 
 ### 为什么传了 `current_version`，仍然拿到全量包？
 
-该参数用于选择可用增量包，不保证一定返回增量包。核对本地版本名是否与上传时一致（包括 `v` 前缀），然后以响应中的 `update_type` 为准；没有可用增量包时应能正常安装全量包。
+对于支持增量更新的 ZIP 资源，该参数用于选择可用增量包，不保证一定返回增量包。核对本地版本名是否与上传时一致（包括 `v` 前缀），然后以响应中的 `update_type` 为准；没有可用增量包时应能正常安装全量包。
+
+APK、EXE 等安装包按完整包分发，不使用 `current_version` 请求增量包，也不需要处理 `changes.json`。具体包型和 RID 以接入方案为准。
 
 ### 下载链接失效或下载失败怎么办？
 
@@ -58,9 +60,15 @@ CDK 是用户下载凭证；`MirrorChyanUploadToken` 是开发者上传凭证，
 
 ## 上传与多平台发布
 
+### 收到接入 PR 后，需要做什么？
+
+确认要分发的包及平台，在**自己的项目仓库**配置下面的上传 Token，再审阅并合并 PR。我们会在提交 PR 前实际运行上传工作流验证，你无需再手动上传首个包或重新设计 CI。
+
+合并后按原有方式发版即可，上传包和同步更新日志的触发时机以 PR 说明为准。使用自研客户端时，API 集成仍由项目方完成；请求示例会随接入方案提供。
+
 ### 如何设置仓库的 MirrorChyanUploadToken？
 
-先取得官方为项目提供的 CI/CD 方案和上传 Token，再进行配置；上传工作流由官方按项目提供。
+收到接入 PR 和官方提供的上传 Token 后，在**你自己的项目仓库**中配置。无需将 Token 发到 PR 或交给 AI。
 
 在 GitHub 仓库页面依次进入 `Settings` → `Secrets and variables` → `Actions`，点击 `New repository secret`，名称填写 `MirrorChyanUploadToken`，值填写从 Mirror酱 获得的 Token。
 
@@ -86,7 +94,11 @@ GitHub 会将 secret 名称统一保存为大写，列表中显示 `MIRRORCHYANU
 
 同一项目同时发布 [MaaFwApp](https://github.com/Aliothmoon/MaaFwApp)、[MXU](https://github.com/MistEO/MXU)、[MFAAvalonia](https://github.com/MaaXYZ/MFAAvalonia) 等不同 GUI 的版本时，**每个 GUI 需要独立 RID**，避免不同包混用导致增量更新问题。请联系官方获取，不要自行命名后上传。
 
-MaaFwApp 可在 `pi-profile.yaml` 的 `update.mirrorchyanRid` 中单独指定 RID，覆盖 `interface.json` 中的值，具体以对应 GUI 文档为准。
+同一产品、同一用途的不同系统 / 架构可以共用 RID，通过 `os` / `arch` 区分；ZIP 与 APK、EXE 等安装包需要拆分 RID，GUI / CLI 等需独立选择的包也应分开。我们会按实际发布产物确定划分，并随接入方案说明对应关系。
+
+### 接入后会自动加入官网项目列表吗？
+
+加入或更新[官网项目一览](https://mirrorchyan.com/zh/projects)是可选的。希望展示时，我们会与你确认项目名称、简介、链接、支持平台和 Logo；接入分发服务不等于默认同意上架。
 
 ## 提问时需要提供什么？
 
