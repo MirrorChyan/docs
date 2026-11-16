@@ -4,6 +4,8 @@
 
 **这是面向少数项目的特殊更新方式，集成复杂，一般不推荐使用。绝大多数项目应继续使用普通 ZIP 增量更新或完整安装包分发。** 只有用户安装目录本身是 Git 仓库、更新器需要沿分支拉取源码并维护 Git 状态时，才考虑 Git Pack。
 
+本指南面向已收到 Mirror 酱接入 PR 或交付说明的项目开发者，说明客户端如何检查、下载和应用源码更新。
+
 ## 我的项目需要这种方式吗？
 
 | 项目的实际更新方式 | 应选择的方式 |
@@ -18,75 +20,28 @@
 
 这类项目如果直接用普通 ZIP 增量包覆盖工作区，文件虽变了，Git 的 HEAD 和分支引用却没有更新，后续可能被判定为本地修改，或又被原来的 Git 更新流程覆盖。Git Pack 分发的是 Git 对象，客户端导入后还需更新引用、执行原有检出流程，才能保持源码和 Git 状态一致。
 
-## 接入前需要确认什么？
+## 开始前：使用官方交付的信息
 
-源码热更新与启动器 / 运行时发版分开：
+从接入 PR 或交付说明取得源码 RID、跟踪分支、通道和请求示例，同时确认项目现有更新器使用的本地仓库与更新流程：
 
-| 对比项 | 启动器 / 运行时发版 | Git Pack 源码热更新 |
-| --- | --- | --- |
-| 内容 | 启动器、Python 等运行时、完整安装产物 | 一个提交及其完整目录树、文件，不含父提交历史 |
-| 触发 | 沿用 tag / Release 发版流程 | 跟踪分支的提交更新 |
-| 资源 | 现有的发版 RID | 独立的 pack RID，不与发版包混用 |
-| 版本名 | 项目原有版本，如 `v2.4.6` | 提交的 committer 时间，UTC 格式 `YYYYMMDDHHmmss` |
+| 信息 | 客户端用途 |
+| --- | --- |
+| 源码 RID | 请求源码更新；它与启动器 / 运行时发行包的 RID 分开 |
+| 跟踪分支与通道 | 确定要更新的本地分支及 `channel`；不根据仓库默认分支自行猜测 |
+| 请求 URL 示例 | 核对 RID 和通道；源码不区分平台，不传 `os` / `arch` |
+| 本地源码仓库与现有更新流程 | 确定 HEAD 来源、对象导入位置、检出、依赖同步和失败恢复方式 |
 
-- **Mirror 酱接入方**确认 pack RID、跟踪分支及通道，适配并验证上传工作流，随接入 PR 提供这些信息。
-- **项目开发者**配置上传 Token，改造客户端的版本计算、检查更新、对象导入、浅克隆边界和检出流程，并验证失败恢复。仅合并上传工作流不能完成客户端接入。
-- **项目开发者**继续负责源码与运行时的兼容性判断、依赖安装、本地修改的处理策略及 Git 更新源回退策略。通用 GUI 对普通 ZIP 的支持不代表支持 `update_type=pack`。
+源码更新包包含一个提交及其完整目录树、文件，不含父提交历史。它不会升级启动器或运行时；这一层继续使用项目已有的发版更新方式。客户端不能把发行包的 RID 或 SemVer 版本号用作源码更新参数。
 
-## CI 上传
-
-使用专用的 [git-pack-uploading-action](https://github.com/MirrorChyan/git-pack-uploading-action)，将跟踪分支当前提交上传为快照。它会收集这个提交及其完整目录树和文件，生成非 thin 的 `.pack`，不携带历史；浅检出 `fetch-depth: 1` 即可。
-
-下面是跟踪 `main`、发布到 `stable` 的示例。实际 RID、分支、通道及触发方式以官方接入 PR 为准；将 `OWNER/REPO` 替换为上游仓库，`YOUR_PACK_RID` 替换为官方提供的 pack RID。Token 按[说明](./FAQ.md#如何设置仓库的-mirrorchyanuploadtoken)存入 `MirrorChyanUploadToken` secret。
-
-```yaml
-name: MirrorChyan Git Pack
-
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-
-concurrency:
-  group: mirrorchyan-pack-stable
-  cancel-in-progress: false
-
-jobs:
-  upload:
-    if: ${{ github.repository == 'OWNER/REPO' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 1
-      - uses: MirrorChyan/git-pack-uploading-action@v1
-        with:
-          mirrorchyan_rid: YOUR_PACK_RID
-          upload_token: ${{ secrets.MirrorChyanUploadToken }}
-          branch: main
-          channel: stable
-```
-
-- pack 源码资源不区分平台，上传和客户端请求均不填写 `os` / `arch`。RID 对应的更新类型需为 `pack`，由接入方案确认。
-- `actions/checkout` 的 `ref` 和 Action 的 `branch` 必须一致。非 `push` 触发时也应明确这两项，避免手动运行上传了默认分支的源码。
-- 保留 checkout 默认的 `persist-credentials: true`，私有仓库检查远程分支最新提交时会用到这份凭据。
-- `concurrency` 串行处理同一上传流程。Action 只上传仍是 `origin` 上该分支最新提交的 HEAD，旧任务重跑时会跳过过期提交。
-- 用 `GITHUB_TOKEN` 推送或合并产生的提交不会再次触发 `push`；有这类自动提交时，由接入方案补充 `workflow_run` 或 `schedule`。
-- Action 默认自动生成更新日志；其他参数和输出见 [Action 文档](https://github.com/MirrorChyan/git-pack-uploading-action#输入)。
-
-分支与 `stable` / `beta` / `alpha` 的映射在 CI 中设置。同一个版本只属于一个通道：再次上传到更稳定的通道时会移动过去，上传到更不稳定的通道时保持原通道。不要依靠把同一提交重复上传到多个通道来维护互相独立的版本。
+开发者需要在应用中提供更新源选择和 CDK 设置，并实现下文的版本检查、Git 对象导入、浅克隆边界维护及检出。CDK 应掩码显示并按项目现有方式保存，日志、配置导出和崩溃报告中需脱敏；上传 Token 不放入客户端。通用 GUI 对普通 ZIP 的支持不代表支持 `update_type=pack`。
 
 ## 客户端版本与请求
 
 ### 从 HEAD 计算当前版本
 
-CI、服务端和客户端使用同一规则：读取 **committer 时间**的 Unix 时间戳，转换为 **UTC**，格式化为 `YYYYMMDDHHmmss`，例如 `20261116083000`。不能使用 author 时间、本地时区、Release tag 或短 SHA。
+客户端从当前源码仓库 HEAD 读取 **committer 时间**的 Unix 时间戳，转换为 **UTC**，格式化为 `YYYYMMDDHHmmss`，例如 `20261116083000`。这应与同一提交已发布的版本名一致，不能使用 author 时间、本地时区、Release tag 或短 SHA。
 
-使用 git 命令行的 Python 示例：
+使用 git 命令行的 Python 示例，应在待更新的源码仓库目录中执行：
 
 ```python
 import subprocess
@@ -106,19 +61,30 @@ current_version = datetime.fromtimestamp(timestamp, timezone.utc).strftime("%Y%m
 
 读取提交信息使用 `git cat-file commit`，避免用 `git log` / `git show` 计算版本：快照不带父提交，在写入 shallow 边界前，遍历历史的命令可能失败。
 
-版本名精确到秒；同一秒的不同提交会重名，服务端会拒绝用另一个提交覆盖已有版本。遇到这种上传冲突应检查提交时间，不能随意改上传版本名绕过校验。
-
 ### 请求最新版本
 
-复用现有 `/latest` 接口；下例中的 RID 和 CDK 需替换为实际值，不传 `os` / `arch`：
+复用现有 `/latest` 接口；下例中的 RID、通道以官方交付为准，CDK 替换为用户自己的值，不传 `os` / `arch`：
 
 ```http
 GET https://mirrorchyan.com/api/resources/YOUR_PACK_RID/latest?current_version=20261116083000&channel=stable&cdk=YOUR_CDK
 ```
 
-当前还没有仓库 / HEAD，或需要完整快照时，省略或留空 `current_version`。未填写 CDK 时仍可检查版本；下载需要适用于该资源的有效 CDK。HTTP 状态、业务码、下载地址时效和 SHA-256 校验沿用[客户端集成](./Integration.md#api-接口)。
+当前还没有仓库 / HEAD，或需要完整快照时，省略或留空 `current_version`。未填写 CDK 时仍可检查版本；下载需要适用于该资源的有效 CDK。
 
-**pack 只比较版本名是否相等，不使用“大于当前版本才更新”的规则。** 分支 force-push 回到旧提交并重新上传后，旧时间戳也可能是最新发布版本；客户端应允许跟随这个回退。同一提交可重新发布，不能按时间戳大小推断服务端当前跟踪的分支状态。
+同时检查 HTTP 状态和 JSON 的 `code`；成功时 `code` 为 `0`，从 `data` 读取：
+
+| 字段 | 客户端处理 |
+| --- | --- |
+| `version_name` | 按下文规则与本地版本比较 |
+| `release_note` | 展示本次更新日志 |
+| `url` | 有更新且 CDK 有效时取得带时效的下载地址；支持重定向，过期后重新请求 |
+| `sha256` | 校验本次返回的整个下载包，失败时丢弃，不能安装 |
+| `filesize` | 下载大小（字节），可用于进度展示 |
+| `update_type` | 本指南处理 `pack`，其他类型不进入 Git 对象应用流程 |
+
+没有 `url` 不代表没有更新，应先比较 `version_name`；需要下载但没有地址时，提示填写有效 CDK，或按项目约定使用原 Git 源。请求应异步执行并设置超时；非 2xx 响应若是 JSON，也读取业务码，网络错误或解析失败不能当作“已是最新版本”。
+
+**pack 只比较版本名是否相等，不使用“大于当前版本才更新”的规则。** 分支回退后，旧时间戳也可能是最新发布版本；客户端应允许跟随这个回退，不能按时间戳大小推断服务端当前跟踪的分支状态。
 
 pack 资源的全量和增量响应都使用 `update_type: "pack"`，目标提交在下载包的 `meta.json` 中，不在 API 中另加 commit 字段。当前版本未知、没有可用增量包或增量包较大时会返回完整快照，客户端必须兼容。
 
@@ -147,6 +113,8 @@ meta.json
 
 ### 通用应用流程
 
+下列 Git 命令展示调用 git 命令行的实现路径。使用 pygit2 的客户端可按下一节通过对象 API 和原有导入流程完成等价操作，无需因此引入 git.exe。
+
 1. **检查本地状态。** 按项目原有策略处理本地修改，记录更新前 HEAD；让自动检查和实际更新共用同一套更新源设置，避免选择 Mirror 酱后仍定时执行上游 `git fetch`。
 2. **下载并校验。** 使用本次响应中的 `sha256` 校验整个 ZIP，解压到临时目录，写入前校验归档路径，读取并校验 `meta.json` 的对象 ID。
 3. **核对基准。** `meta.base` 非空时，必须等于当前 HEAD 的完整对象 ID；应用前再次确认 HEAD 没有变化。不匹配时丢弃该增量包，不带 `current_version` 重新请求完整快照。
@@ -166,15 +134,14 @@ meta.json
 
 - **运行时兼容性由客户端负责。** 源码更新不包含启动器或运行时升级；不兼容时保留当前代码，提示先更新发版资源。依赖是否需要重新安装由项目现有机制决定。
 - **首次安装仍需单独设计。** 完整快照可初始化源码仓库，但 `/latest` 只提供最新版本；若首次启动必须检出与内置运行时匹配的指定 tag，仍需保留原有获取方式。
-- **发版后可继续热更新。** 发版所带 HEAD 若已作为 pack 版本上传，可用它计算当前版本并请求后续更新；服务端不认识该版本时会返回完整快照。
+- **发版后可继续热更新。** 使用发版所带源码的 HEAD 计算当前版本并请求后续更新；服务端不认识该版本时会返回完整快照。
 - **错误应清楚可见。** 尤其要区分 CDK 错误 7001–7005、下载失败、基准不匹配和 Git 导入 / 检出失败，见[错误代码表](./ErrorCode.md)。是否自动退回原 Git 源由项目决定；回退时明确显示实际更新源。
 - **更新记录需适配浅历史。** 不能假设 `git log` 能跨过所有热更新版本；需要连续更新记录时，另行保存更新前后的提交信息或专用引用，并设置保留上限。
 - **不支持子模块的自动更新。** 子模块对象不在该仓库的快照中。Git LFS 的外置内容及仓库外运行依赖也需单独安排分发，不能认为它们会随 pack 一起下载。
 
 ## 上线前验证
 
-- [ ] CI 和客户端从同一提交算出相同的 UTC 版本名；不把 Release 版本作为 pack 的当前版本。
-- [ ] 普通 push 能上传；旧任务重跑会跳过过期提交；自动提交触发方式符合项目配置。
+- [ ] 客户端从源码 HEAD 算出的 UTC 版本名与该提交已发布的版本一致，不把 Release 版本作为 pack 的当前版本。
 - [ ] 完整快照和匹配基准的增量包均能应用，包含新增、修改、删除文件的更新结果正确。
 - [ ] `meta.base` 与 HEAD 不匹配时改取完整快照，应用前 HEAD 改变时不会误用旧增量包。
 - [ ] 缺少父提交时能维护 shallow，后续 Git 检查、更新及项目需要的历史展示仍可用。
@@ -182,4 +149,4 @@ meta.json
 - [ ] 本地修改、运行时不兼容、依赖同步失败、下载损坏和更新中断都有明确处理，能够恢复可运行版本。
 - [ ] 不填 CDK、错误 CDK 和网络失败按项目约定处理，用户能看出实际使用的更新源；日志不含密钥或完整下载链接。
 
-上传工作流验证通过只代表快照已分发；上线前仍需开发者完成客户端应用和恢复验证。
+使用真实旧版本的源码仓库完成上述验证，确认更新后的 HEAD、工作区和运行依赖一致，应用可正常启动。

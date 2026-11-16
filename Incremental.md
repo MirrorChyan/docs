@@ -6,8 +6,6 @@
 
 本页适用于接入方案中支持增量更新的 ZIP 等归档资源。APK、EXE 等安装包按完整包分发，不使用本页的解压覆盖流程。
 
-特殊的 `update_type=pack` 也用 ZIP 容器分发，但内容是 Git 对象，不使用 `changes.json` 或本页的文件覆盖步骤。它仅适用于用户本地沿分支更新源码 Git 仓库的少数项目，集成复杂，一般不推荐；详见 [Git Pack 适用条件与接入](./GitPack.md)。
-
 ## 何时使用增量包
 
 检查版本时，传入与上传版本名格式一致的 `current_version`，服务端会选择可用的更新包。**不是每次更新都有增量包**，客户端需同时支持 `update_type=incremental` 和 `update_type=full`，以本次 API 响应为准。

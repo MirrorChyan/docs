@@ -4,8 +4,6 @@
 
 本页适用于有自己界面和更新代码的客户端。通用 GUI 项目可直接使用[配置接入](./QuickStart.md#通用-gui-项目)，无需重复实现更新器。
 
-下方的版本比较和安装流程面向普通 ZIP 资源及完整安装包。**Git Pack 是少数 Git 仓库源码更新项目使用的特殊方式，集成复杂，一般不推荐。** 已在官方接入方案中确定使用 `pack` 的项目，按 [Git Pack 指南](./GitPack.md)实现版本计算、分支回退和 Git 对象应用；仅代码托管在 GitHub 不需要选择这种方式。
-
 我们会随接入 PR 或交付说明提供 RID、发布包与平台映射、请求 URL 示例。按[快速开始](./QuickStart.md#自研客户端)使用示例确认响应后，再将下列流程接入客户端；具体交互可按项目调整。
 
 ## 设置项
@@ -27,7 +25,7 @@ GET https://mirrorchyan.com/api/resources/{res_id}/latest
 | 参数 | 位置 | 是否需要 | 说明 |
 | --- | --- | --- | --- |
 | `res_id` | path | 必填 | 官方分配的资源 ID（RID） |
-| `current_version` | query | 按包型 | 普通 ZIP 增量更新传当前本地版本，与上传版本名保持同一格式，如统一带 `v`；请求完整包时留空，APK / EXE 安装包留空。特殊 pack 资源传 [HEAD 的 committer 时间（UTC）](./GitPack.md#从-head-计算当前版本) |
+| `current_version` | query | 按包型 | ZIP 增量更新传当前本地版本，与上传版本名保持同一格式，如统一带 `v`；请求完整包时留空，APK / EXE 安装包留空 |
 | `cdk` | query | 可选 | 用户 CDK；未填写时不传，仍可检查版本 |
 | `os` | query | 按资源配置 | 常用规范值：`windows`、`linux`、`darwin`、`android`；不区分系统时不传 |
 | `arch` | query | 按资源配置 | 常用规范值：`386`、`amd64`、`arm`、`arm64`；不区分架构时不传 |
@@ -49,7 +47,7 @@ GET https://mirrorchyan.com/api/resources/{res_id}/latest
 | `url` | 带时效的下载地址，有可用更新且 CDK 有效时返回；取得后尽快下载，不持久缓存 |
 | `sha256` | 当前返回的下载包的 SHA-256，用于安装前校验 |
 | `filesize` | 当前下载包的大小（字节），可用于显示进度 |
-| `update_type` | 普通 ZIP 为 `incremental` 或 `full`，客户端需兼容两种包；APK / EXE 等安装包按完整包处理。特殊 Git 对象包为 `pack`，按 [Git Pack 流程](./GitPack.md#下载包格式与应用步骤)导入 |
+| `update_type` | `incremental` 或 `full`；ZIP 更新需兼容两种包，APK / EXE 等安装包按完整包处理 |
 | `channel` / `os` / `arch` | 本次查询的通道、系统和架构 |
 | `custom_data` | 开发者上传时附带的自定义数据 |
 | `cdk_expired_time` | CDK 到期时间戳，可用于展示到期提示 |
@@ -70,8 +68,6 @@ GET https://mirrorchyan.com/api/resources/{res_id}/latest
 上例仅用于说明错误结构，实际 `msg` 文案以接口返回为准。各错误码的用户提示和处理建议见[错误代码表](./ErrorCode.md)。
 
 ## 检查更新流程
-
-以下流程按普通发布版本判断升级。pack 源码更新比较版本名是否相等，并允许跟随分支回退，见 [pack 版本规则](./GitPack.md#请求最新版本)。
 
 ```mermaid
 flowchart TD
@@ -96,7 +92,7 @@ flowchart TD
 
 ## 下载与安装
 
-先按接入方案确认包型：普通 ZIP 资源可使用 `current_version` 选择可用增量包，留空则请求完整包；APK、EXE 等安装包始终按完整包下载安装，不进入 `changes.json` 的解压覆盖流程。`update_type=pack` 时执行 [Git 对象导入与检出](./GitPack.md#下载包格式与应用步骤)，不执行下方的安装目录覆盖步骤；不支持该类型的客户端应提示更新器不支持并停止安装。
+先按接入方案确认包型：ZIP 资源可使用 `current_version` 选择可用增量包，留空则请求完整包；APK、EXE 等安装包始终按完整包下载安装，不进入 `changes.json` 的解压覆盖流程。
 
 1. 从响应中的 `url` 下载，支持 HTTP 重定向。下载失败时检查 HTTP 状态；有 JSON 错误体时解析 `code` / `msg`，否则显示可重试的下载失败提示。
 2. 使用本次响应中的 `sha256` 校验下载包，失败则丢弃，不执行安装。不要把其他来源的包与 Mirror酱 返回的哈希混用。
@@ -109,8 +105,6 @@ flowchart TD
 ## 上线前验收
 
 使用官方确认的资源、版本和测试信息完成以下检查，包型相关项按项目实际情况验证，CDK 和 Token 不写入测试记录：
-
-pack 项目使用独立的[上线前验证清单](./GitPack.md#上线前验证)，包含分支回退及浅克隆边界；下方“不自动降级”针对普通发版资源。
 
 - [ ] 不填 CDK：成功获取版本信息；有更新但无 `url` 时，可以使用原有下载源。
 - [ ] 有效 CDK + 真实旧版本：能下载、校验并完成更新。

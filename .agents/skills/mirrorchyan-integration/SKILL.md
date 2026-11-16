@@ -19,9 +19,7 @@ description: 为应用接入 Mirror酱（MirrorChyan）更新分发服务。优�
 
 ## 先判断项目类型
 
-**先区分更新包类型。** 绝大多数项目使用普通 ZIP 增量更新或完整安装包分发；代码托管在 GitHub、开发时使用 Git，不代表需要 Git Pack。Git Pack 仅用于用户本地源码 Git 仓库沿分支更新的特殊场景，集成复杂，一般不推荐。仅在官方交付明确使用 pack RID 时，按 [GitPack.md](https://github.com/MirrorChyan/docs/blob/main/GitPack.md)实现；不要自行把普通项目迁移为 pack，也不要将普通 GUI 的 ZIP 更新能力视为 pack 支持。
-
-pack 项目可复用下方设置项、HTTP 请求及错误处理要求，版本计算、版本判断、Git 对象应用和验收改用 GitPack.md；不要套用第 4、5 步的 SemVer 判断与文件覆盖流程。
+用户明确指定 Git Pack 源码更新时，先阅读 [Git Pack 完整集成指南](https://github.com/MirrorChyan/docs/blob/main/GitPack.md)，按该文档接入。
 
 | 迹象                                                                                                                                                                                                                     | 类型              |
 |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------|
@@ -90,7 +88,7 @@ GET https://mirrorchyan.com/api/resources/{res_id}/latest
 | 参数                | 位置    | 说明                                                                            |
 |-------------------|-------|-------------------------------------------------------------------------------|
 | `res_id`          | path  | 资源 ID，必填                                                                      |
-| `current_version` | query | 普通 ZIP 增量更新传本地版本，格式需与上传版本名一致；请求完整包时留空，APK / EXE 安装包留空。pack 按 GitPack.md 传 HEAD 的 committer 时间（UTC） |
+| `current_version` | query | ZIP 增量更新传本地版本，格式需与上传版本名一致；请求完整包时留空，APK / EXE 安装包留空。不保证一定返回增量包，以 `update_type` 为准 |
 | `cdk`             | query | 用户 CDK，未填写时不传                                                                 |
 | `os`              | query | `windows` / `linux` / `darwin` / `android`；也接受 `win`、`macos` 等别名。资源不区分系统时不传   |
 | `arch`            | query | `386` / `amd64` / `arm` / `arm64`；也接受 `x64`、`x86_64`、`aarch64` 等别名。资源不区分架构时不传 |
@@ -118,7 +116,7 @@ GET https://mirrorchyan.com/api/resources/{res_id}/latest
 | `release_note`            | 更新日志                                        |
 | `url`                     | 带时效的下载地址，**仅在有新版本且 CDK 有效时返回**。拿到后尽快下载，不要缓存 |
 | `sha256` / `filesize`     | 下载后校验完整性 / 显示进度                             |
-| `update_type`             | 普通资源为 `incremental`（增量）或 `full`（全量）；特殊 Git 对象包为 `pack`，按 GitPack.md 应用 |
+| `update_type`             | `incremental`（增量）或 `full`（全量）               |
 | `channel` / `os` / `arch` | 本次查询的通道 / 系统 / 架构                         |
 | `custom_data`             | 开发者上传时附带的自定义数据                              |
 | `cdk_expired_time`        | CDK 到期时间戳，可用于提示续费                           |
@@ -144,8 +142,6 @@ CDK 相关错误（7001–7005）不应影响用户通过其他渠道获取更�
 
 ## 第 4 步：比较版本并下载
 
-以下流程用于普通发版资源。pack 使用 HEAD 的 UTC 时间戳版本，仅比较是否相等，并允许跟随分支回退，详见 GitPack.md。
-
 ```text
 code == 0 ?
 ├─ 否 → 按错误码提示
@@ -163,7 +159,7 @@ code == 0 ?
 
 ## 第 5 步：安装更新
 
-APK、EXE 等安装包按完整包分发，校验后交给对应安装流程，不解压或处理 `changes.json`。`update_type=pack` 按 GitPack.md 导入 Git 对象、维护 shallow 和引用并检出；不支持时停止安装，不能将它当作普通 ZIP。以下步骤仅适用于普通 ZIP 等归档资源：
+APK、EXE 等安装包按完整包分发，校验后交给对应安装流程，不解压或处理 `changes.json`。以下步骤仅适用于 ZIP 等归档资源：
 
 1. 解压到临时目录，在写入每个条目前校验目标路径和链接，再校验 `changes.json`；通过后才准备退出主程序或由独立更新进程替换安装文件。
 2. 若包内存在 `changes.json`，删除安装目录中 `deleted` 列出的文件和 `deleted_dir`
@@ -209,8 +205,6 @@ APK、EXE 等安装包按完整包分发，校验后交给对应安装流程，�
 `os` / `arch` / `channel`（不含 CDK），便于排查。
 
 ## 验收清单
-
-官方交付明确使用 pack 的项目，按 [Git Pack 验证清单](https://github.com/MirrorChyan/docs/blob/main/GitPack.md#上线前验证)验收。
 
 情况 A：按接入 PR 和对应 GUI 文档确认配置，并在 GUI 中实际检查一次更新。使用 `interface.json` 的项目还需通过 [schema](https://github.com/MaaXYZ/MaaFramework/blob/main/tools/interface.schema.json)校验。返回 404 时按上一节排查，APK 项目按对应版本的完整安装包流程验证。
 
