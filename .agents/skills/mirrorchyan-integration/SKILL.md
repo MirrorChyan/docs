@@ -19,6 +19,8 @@ description: 为应用接入 Mirror酱（MirrorChyan）更新分发服务。优�
 
 ## 先判断项目类型
 
+用户明确指定 Git Pack 源码更新时，先阅读 [Git Pack 完整集成指南](https://github.com/MirrorChyan/docs/blob/main/GitPack.md)，按该文档接入。
+
 | 迹象                                                                                                                                                                                                                     | 类型              |
 |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------|
 | 项目使用当前版本已支持 Mirror酱 的通用 GUI，如 [MXU](https://github.com/MistEO/MXU)、[MFAAvalonia](https://github.com/MaaXYZ/MFAAvalonia)；其他 GUI 先核对对应版本文档和接入 PR | **情况 A：通用 GUI** |
